@@ -48,6 +48,8 @@
 #include <memory>
 #include <string>
 
+#include <iostream>
+
 using namespace llvm;
 
 static cl::opt<bool> EnableMachineCombinerPass("x86-machine-combiner",

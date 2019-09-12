@@ -100,6 +100,8 @@ add_llvm_library(LLVMCodeGen
   OptimizePHIs.cpp
   ParallelCG.cpp
   PeepholeOptimizer.cpp
+  Permutation.cpp
+  PermutationScheduler.cpp
   PHIElimination.cpp
   PHIEliminationUtils.cpp
   PostRAHazardRecognizer.cpp
@@ -119,6 +121,7 @@ add_llvm_library(LLVMCodeGen
   RegisterPressure.cpp
   RegisterScavenging.cpp
   RenameIndependentSubregs.cpp
+  Permutations.cpp
   MIRCanonicalizerPass.cpp
   RegisterUsageInfo.cpp
   RegUsageInfoCollector.cpp

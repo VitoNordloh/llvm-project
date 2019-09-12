@@ -33,6 +33,7 @@
 #include "llvm/CodeGen/MachinePassRegistry.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/PermutationScheduler.h"
 #include "llvm/CodeGen/RegisterClassInfo.h"
 #include "llvm/CodeGen/RegisterPressure.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
@@ -67,6 +68,10 @@
 #include <tuple>
 #include <utility>
 #include <vector>
+#include <iostream>
+#include <memory>
+
+#include "Permutations.h"
 
 using namespace llvm;
 
@@ -83,6 +88,7 @@ DumpCriticalPathLength("misched-dcpl", cl::Hidden,
                        cl::desc("Print critical path length to stdout"));
 
 } // end namespace llvm
+
 
 #ifndef NDEBUG
 static cl::opt<bool> ViewMISchedDAGs("view-misched-dags", cl::Hidden,
@@ -153,7 +159,7 @@ public:
   void print(raw_ostream &O, const Module* = nullptr) const override;
 
 protected:
-  void scheduleRegions(ScheduleDAGInstrs &Scheduler, bool FixKillFlags);
+  void scheduleRegions(ScheduleDAGInstrs *Scheduler, ScheduleDAGInstrs *PermutationScheduler, bool FixKillFlags);
 };
 
 /// MachineScheduler runs after coalescing and before register allocation.
@@ -266,6 +272,11 @@ static cl::opt<bool> EnablePostRAMachineSched(
     cl::desc("Enable the post-ra machine instruction scheduling pass."),
     cl::init(true), cl::Hidden);
 
+static cl::opt<bool> EnablePermutationMachineSched(
+    "enable-permutation-misched",
+    cl::desc("Enable permutation scheduler."),
+    cl::init(false), cl::Hidden);
+
 /// Decrement this iterator until reaching the top or a non-debug instr.
 static MachineBasicBlock::const_iterator
 priorNonDebug(MachineBasicBlock::const_iterator I,
@@ -310,15 +321,20 @@ nextIfDebug(MachineBasicBlock::iterator I,
 ScheduleDAGInstrs *MachineScheduler::createMachineScheduler() {
   // Select the scheduler, or set the default.
   MachineSchedRegistry::ScheduleDAGCtor Ctor = MachineSchedOpt;
-  if (Ctor != useDefaultMachineSched)
-    return Ctor(this);
+  if (Ctor != useDefaultMachineSched) {
+      LLVM_DEBUG(dbgs() << "Do not use default scheduler\n");
+      return Ctor(this);
+  }
 
   // Get the default scheduler set by the target for this function.
   ScheduleDAGInstrs *Scheduler = PassConfig->createMachineScheduler(this);
-  if (Scheduler)
-    return Scheduler;
+  if (Scheduler) {
+      LLVM_DEBUG(dbgs() << "Use default scheduler\n");
+      return Scheduler;
+  }
 
   // Default to GenericScheduler.
+  LLVM_DEBUG(dbgs() << "Use GenericScheduler\n");
   return createGenericSchedLive(this);
 }
 
@@ -352,14 +368,17 @@ ScheduleDAGInstrs *PostMachineScheduler::createPostMachineScheduler() {
 /// design would be to split blocks at scheduling boundaries, but LLVM has a
 /// general bias against block splitting purely for implementation simplicity.
 bool MachineScheduler::runOnMachineFunction(MachineFunction &mf) {
-  if (skipFunction(mf.getFunction()))
+  if (skipFunction(mf.getFunction())) {
     return false;
+  }
 
   if (EnableMachineSched.getNumOccurrences()) {
-    if (!EnableMachineSched)
+    if (!EnableMachineSched) {
       return false;
-  } else if (!mf.getSubtarget().enableMachineScheduler())
+    }
+  } else if (!mf.getSubtarget().enableMachineScheduler()) {
     return false;
+  }
 
   LLVM_DEBUG(dbgs() << "Before MISched:\n"; mf.print(dbgs()));
 
@@ -380,22 +399,38 @@ bool MachineScheduler::runOnMachineFunction(MachineFunction &mf) {
 
   // Instantiate the selected scheduler for this target, function, and
   // optimization level.
-  std::unique_ptr<ScheduleDAGInstrs> Scheduler(createMachineScheduler());
-  scheduleRegions(*Scheduler, false);
+  ScheduleDAGInstrs *Scheduler = createMachineScheduler();
+
+  // Create the PermutationScheduler
+  /*
+  if(EnablePermutationMachineSched) {
+    LLVM_DEBUG(dbgs() << "Using permutation scheduler\n");
+    return new ScheduleDAGMILive(this, llvm::make_unique<PermutationScheduler>());
+  }*/
+
+  // Create the PermutationScheduler
+  ScheduleDAGInstrs *PermScheduler = new ScheduleDAGMILive(this, llvm::make_unique<PermutationScheduler>());
+
+  scheduleRegions(Scheduler, PermScheduler, false);
 
   LLVM_DEBUG(LIS->dump());
   if (VerifyScheduling)
     MF->verify(this, "After machine scheduling.");
+  LLVM_DEBUG(dbgs() << "Finished Scheduling\n");
   return true;
 }
 
 bool PostMachineScheduler::runOnMachineFunction(MachineFunction &mf) {
-  if (skipFunction(mf.getFunction()))
-    return false;
+  if (skipFunction(mf.getFunction())) {
+      LLVM_DEBUG(dbgs() << "post-MI-sched skipped\n");
+      return false;
+  }
 
   if (EnablePostRAMachineSched.getNumOccurrences()) {
-    if (!EnablePostRAMachineSched)
-      return false;
+    if (!EnablePostRAMachineSched) {
+        LLVM_DEBUG(dbgs() << "post-MI-sched disabled\n");
+        return false;
+    }
   } else if (!mf.getSubtarget().enablePostRAScheduler()) {
     LLVM_DEBUG(dbgs() << "Subtarget disables post-MI-sched.\n");
     return false;
@@ -412,8 +447,8 @@ bool PostMachineScheduler::runOnMachineFunction(MachineFunction &mf) {
 
   // Instantiate the selected scheduler for this target, function, and
   // optimization level.
-  std::unique_ptr<ScheduleDAGInstrs> Scheduler(createPostMachineScheduler());
-  scheduleRegions(*Scheduler, true);
+  ScheduleDAGInstrs *Scheduler = createPostMachineScheduler();
+  scheduleRegions(Scheduler, nullptr, true);
 
   if (VerifyScheduling)
     MF->verify(this, "After post machine scheduling.");
@@ -496,8 +531,11 @@ getSchedRegions(MachineBasicBlock *MBB,
 }
 
 /// Main driver for both MachineScheduler and PostMachineScheduler.
-void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs &Scheduler,
+void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *SchedulerA,
+                                           ScheduleDAGInstrs *PermutationScheduler,
                                            bool FixKillFlags) {
+  Permutations perms;
+
   // Visit all machine basic blocks.
   //
   // TODO: Visit blocks in global postorder or postorder within the bottom-up
@@ -505,7 +543,17 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs &Scheduler,
   for (MachineFunction::iterator MBB = MF->begin(), MBBEnd = MF->end();
        MBB != MBBEnd; ++MBB) {
 
-    Scheduler.startBlock(&*MBB);
+    // Check which scheduler to use
+    ScheduleDAGInstrs* Scheduler;
+    if(PermutationScheduler != nullptr && perms.isEnabled(&*MBB)) {
+        LLVM_DEBUG(dbgs() << "Using permutation scheduler\n");
+        Scheduler = PermutationScheduler;
+    } else {
+        LLVM_DEBUG(dbgs() << "Using normal scheduler\n");
+        Scheduler = SchedulerA;
+    }
+
+    Scheduler->startBlock(&*MBB);
 
 #ifndef NDEBUG
     if (SchedOnlyFunc.getNumOccurrences() && SchedOnlyFunc != MF->getName())
@@ -530,7 +578,7 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs &Scheduler,
     // added to other regions than the current one without updating MBBRegions.
 
     MBBRegionsVector MBBRegions;
-    getSchedRegions(&*MBB, MBBRegions, Scheduler.doMBBSchedRegionsTopDown());
+    getSchedRegions(&*MBB, MBBRegions, Scheduler->doMBBSchedRegionsTopDown());
     for (MBBRegionsVector::iterator R = MBBRegions.begin();
          R != MBBRegions.end(); ++R) {
       MachineBasicBlock::iterator I = R->RegionBegin;
@@ -539,13 +587,13 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs &Scheduler,
 
       // Notify the scheduler of the region, even if we may skip scheduling
       // it. Perhaps it still needs to be bundled.
-      Scheduler.enterRegion(&*MBB, I, RegionEnd, NumRegionInstrs);
+      Scheduler->enterRegion(&*MBB, I, RegionEnd, NumRegionInstrs);
 
       // Skip empty scheduling regions (0 or 1 schedulable instructions).
       if (I == RegionEnd || I == std::prev(RegionEnd)) {
         // Close the current region. Bundle the terminator if needed.
         // This invalidates 'RegionEnd' and 'I'.
-        Scheduler.exitRegion();
+        Scheduler->exitRegion();
         continue;
       }
       LLVM_DEBUG(dbgs() << "********** MI Scheduling **********\n");
@@ -563,19 +611,20 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs &Scheduler,
 
       // Schedule a region: possibly reorder instructions.
       // This invalidates the original region iterators.
-      Scheduler.schedule();
+      Scheduler->schedule();
 
       // Close the current region.
-      Scheduler.exitRegion();
+      Scheduler->exitRegion();
     }
-    Scheduler.finishBlock();
+    Scheduler->finishBlock();
     // FIXME: Ideally, no further passes should rely on kill flags. However,
     // thumb2 size reduction is currently an exception, so the PostMIScheduler
     // needs to do this.
     if (FixKillFlags)
-      Scheduler.fixupKills(*MBB);
+      Scheduler->fixupKills(*MBB);
   }
-  Scheduler.finalizeSchedule();
+  SchedulerA->finalizeSchedule();
+  PermutationScheduler->finalizeSchedule();
 }
 
 void MachineSchedulerBase::print(raw_ostream &O, const Module* m) const {
