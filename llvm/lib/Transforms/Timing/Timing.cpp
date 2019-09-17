@@ -1,6 +1,4 @@
-#include <ctime>
-
-double cps = CLOCKS_PER_SEC;
+#define DEBUG_TYPE "timing-pass"
 
 #include "llvm/Pass.h"
 #include "llvm/IR/BasicBlock.h"
@@ -18,23 +16,33 @@ double cps = CLOCKS_PER_SEC;
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/Debug.h"
 
 #include <vector>
 #include <time.h>
+#include <string>
 
 using namespace std;
 using namespace llvm;
 
+#ifdef __APPLE__
+string clockName("CLOCK_REALTIME");
+clockid_t clock_id = CLOCK_REALTIME;
+#else
+string clockName("CLOCK_MONOTONIC");
 clockid_t clock_id = CLOCK_MONOTONIC;
+#endif
 
 struct Timing : public ModulePass {
     static char ID;
     Timing() : ModulePass(ID) {}
 
     bool runOnModule(Module &M) override {
+        LLVM_DEBUG(dbgs() << "Using " << clockName << "\n");
+
         // Create timespec struct
         vector<Type*> elements;
-        elements.push_back(Type::getInt32Ty(M.getContext()));
+        elements.push_back(Type::getInt64Ty(M.getContext()));
         elements.push_back(Type::getInt64Ty(M.getContext()));
         StructType* timespec = StructType::create(M.getContext(), elements);
 
@@ -110,8 +118,8 @@ struct Timing : public ModulePass {
                             Value *diffS = builder.CreateSub(endTimeS, startTimeS);
                             Value *diffNS = builder.CreateSub(endTimeNS, startTimeNS);
 
-                            Value *castedDiffS = builder.CreateUIToFP(diffS, Type::getDoubleTy(M.getContext()));
-                            Value *castedDiffNS = builder.CreateUIToFP(diffNS, Type::getDoubleTy(M.getContext()));
+                            Value *castedDiffS = builder.CreateSIToFP(diffS, Type::getDoubleTy(M.getContext()));
+                            Value *castedDiffNS = builder.CreateSIToFP(diffNS, Type::getDoubleTy(M.getContext()));
 
                             Constant *nsPerSec = ConstantFP::get(Type::getDoubleTy(M.getContext()), 1E9);
                             Value *div = builder.CreateFDiv(castedDiffNS, nsPerSec);
@@ -119,11 +127,10 @@ struct Timing : public ModulePass {
                             Value *final = builder.CreateFAdd(castedDiffS, div);
 
                             // Print time
-                            Constant *format = builder.CreateGlobalStringPtr("Total Time: %fs + %fns");
+                            Constant *format = builder.CreateGlobalStringPtr("Total Time: %f");
                             vector<Value*> p;
                             p.push_back(format);
-                            p.push_back(castedDiffS);
-                            p.push_back(div);
+                            p.push_back(final);
                             builder.CreateCall(printf, p);
                         }
                     }
