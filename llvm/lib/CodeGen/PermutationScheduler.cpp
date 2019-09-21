@@ -29,7 +29,7 @@ void PermutationScheduler::initialize(ScheduleDAGMI *DAG) {
     for(auto sunit : dag->SUnits) {
         perm->addInstruction(sunit.NodeNum);
         for(auto dep : sunit.Succs) {
-            if(!dep.isWeak()) {
+            if(!dep.isArtificial()) {
                 perm->addDependency(dep.getSUnit()->NodeNum, sunit.NodeNum);
             }
         }
