@@ -3,6 +3,7 @@
 
 #include <tuple>
 #include <list>
+#include <vector>
 #include "llvm/CodeGen/ScheduleDAG.h"
 
 using namespace std;
@@ -13,9 +14,15 @@ class Permutation {
 private:
     class DependencyGraph {
     public:
-        list <tuple<T, T>> dependencies;
+        enum Dep {
+            NORMAL, DIRECT
+        };
+
+        list <tuple<T, T, Dep>> dependencies;
 
         void addDependency(T dependent, T independent);
+        void addDependency(T dependent, T independent, Dep type);
+        vector<T> getDirectDependencies(T independent);
     };
 
     class Schedule {
@@ -37,7 +44,7 @@ private:
 
         void addInstruction(T i);
 
-        list <T> available(DependencyGraph *dg, Schedule *schedule);
+        vector <T> available(DependencyGraph *dg, Schedule *schedule);
     };
 
     DependencyGraph *dg;
@@ -50,9 +57,13 @@ public:
 
     void addDependency(T a, T b);
 
+    void addDirectDependency(T a, T b);
+
     int countPermutations();
 
     list <T> getPermutation(int permutation);
+
+    list<T> getRandomPermutation();
 
     Schedule *permute(int *counter, int *stop, Schedule *schedule);
 };

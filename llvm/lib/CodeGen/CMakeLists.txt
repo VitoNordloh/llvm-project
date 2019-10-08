@@ -33,6 +33,7 @@ add_llvm_library(LLVMCodeGen
   GCRootLowering.cpp
   GCStrategy.cpp
   GlobalMerge.cpp
+  GlobalScheduler.cpp
   IfConversion.cpp
   ImplicitNullChecks.cpp
   IndirectBrExpandPass.cpp
@@ -100,6 +101,7 @@ add_llvm_library(LLVMCodeGen
   OptimizePHIs.cpp
   ParallelCG.cpp
   PeepholeOptimizer.cpp
+  PermScheduler.cpp
   Permutation.cpp
   PermutationScheduler.cpp
   PHIElimination.cpp

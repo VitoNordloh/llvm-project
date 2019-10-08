@@ -1,15 +1,38 @@
-#include <tuple>
-#include <list>
+#include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/Permutation.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
+#include "Permutations.h"
+
 #include <iostream>
+#include <list>
+#include <stdlib.h>
+#include <tuple>
+#include <vector>
 
 using namespace std;
 using namespace llvm;
 
 template <class T>
 void Permutation<T>::DependencyGraph::addDependency(T dependent, T independent) {
-    dependencies.push_back(make_tuple(dependent, independent));
+    dependencies.push_back(make_tuple(dependent, independent, Permutation<T>::DependencyGraph::NORMAL));
+}
+
+template <class T>
+void Permutation<T>::DependencyGraph::addDependency(T dependent, T independent, typename Permutation<T>::DependencyGraph::Dep type) {
+    dependencies.push_back(make_tuple(dependent, independent, type));
+}
+
+template <class T>
+vector<T> Permutation<T>::DependencyGraph::getDirectDependencies(T independent) {
+    vector<T> directDependencies(0);
+    for(auto &dep : dependencies) {
+        T a = get<0>(dep);
+        T b = get<1>(dep);
+        if(b == independent && get<2>(dep) == DIRECT) {
+            directDependencies.push_back(a);
+        }
+    }
+    return directDependencies;
 }
 
 template <class T>
@@ -33,8 +56,8 @@ void Permutation<T>::InstructionSet::addInstruction(T i) {
 }
 
 template <class T>
-list <T> Permutation<T>::InstructionSet::available(Permutation::DependencyGraph *dg, Permutation::Schedule *schedule) {
-    list <T> avail;
+vector <T> Permutation<T>::InstructionSet::available(Permutation::DependencyGraph *dg, Permutation::Schedule *schedule) {
+    vector <T> avail;
     for (auto &inst : instructions) {
         if (find(schedule->instructions.begin(), schedule->instructions.end(), inst) !=
             schedule->instructions.end()) {
@@ -76,6 +99,11 @@ void Permutation<T>::addDependency(T a, T b) {
 }
 
 template <class T>
+void Permutation<T>::addDirectDependency(T a, T b) {
+    dg->addDependency(a, b, Permutation<T>::DependencyGraph::DIRECT);
+}
+
+template <class T>
 int Permutation<T>::countPermutations() {
     int counter = 0;
     int stop = -1;
@@ -94,11 +122,32 @@ list <T> Permutation<T>::getPermutation(int permutation) {
 }
 
 template <class T>
+list<T> Permutation<T>::getRandomPermutation() {
+    Schedule *schedule = new Schedule();
+    while(schedule->instructions.size() != is->instructions.size()) {
+        vector <T> avail = is->available(dg, schedule);
+        int i = rand() % avail.size();
+        schedule->scheduleInstruction(avail[i]);
+
+        // Schedule instructions which have a direct dependency
+        for(auto &directInst : dg->getDirectDependencies(avail[i])) {
+            schedule->scheduleInstruction(directInst);
+        }
+    }
+    return schedule->toList();
+}
+
+template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
-    list <T> avail = is->available(dg, schedule);
+    vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
         Schedule *newSchedule = new Schedule(*schedule);
         newSchedule->scheduleInstruction(inst);
+
+        // Schedule instructions which have a direct dependency
+        for(auto &directInst : dg->getDirectDependencies(inst)) {
+            newSchedule->scheduleInstruction(directInst);
+        }
 
         if (newSchedule->instructions.size() == is->instructions.size()) {
             (*counter)++;
@@ -120,3 +169,4 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
 }
 
 template class Permutation<unsigned int>;
+template class Permutation<MachineInstr*>;

@@ -1070,6 +1070,8 @@ void TargetPassConfig::addOptimizedRegAlloc(FunctionPass *RegAllocPass) {
   // preferably fix the scavenger to not depend on them).
   addPass(&LiveVariablesID, false);
 
+  addPass(&GlobalSchedulerID);
+
   // Edge splitting is smarter with machine loop info.
   addPass(&MachineLoopInfoID, false);
   addPass(&PHIEliminationID, false);
@@ -1088,6 +1090,7 @@ void TargetPassConfig::addOptimizedRegAlloc(FunctionPass *RegAllocPass) {
 
   // PreRA instruction scheduling.
   addPass(&MachineSchedulerID);
+  addPass(&PermSchedulerID);
 
   if (RegAllocPass) {
     // Add the selected register allocation pass.

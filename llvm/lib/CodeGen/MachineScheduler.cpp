@@ -74,6 +74,7 @@
 #include "Permutations.h"
 
 using namespace llvm;
+using namespace std;
 
 #define DEBUG_TYPE "machine-scheduler"
 
@@ -342,6 +343,7 @@ ScheduleDAGInstrs *MachineScheduler::createMachineScheduler() {
 /// the caller. We don't have a command line option to override the postRA
 /// scheduler. The Target must configure it.
 ScheduleDAGInstrs *PostMachineScheduler::createPostMachineScheduler() {
+  cout << "USING POST RA" << endl;
   // Get the postRA scheduler set by the target for this function.
   ScheduleDAGInstrs *Scheduler = PassConfig->createPostMachineScheduler(this);
   if (Scheduler)
@@ -2432,8 +2434,10 @@ LLVM_DUMP_METHOD void SchedBoundary::dumpScheduledState() const {
 void GenericSchedulerBase::SchedCandidate::
 initResourceDelta(const ScheduleDAGMI *DAG,
                   const TargetSchedModel *SchedModel) {
-  if (!Policy.ReduceResIdx && !Policy.DemandResIdx)
+  if (!Policy.ReduceResIdx && !Policy.DemandResIdx) {
+    LLVM_DEBUG(dbgs() << "not initialising initResourceDelta\n");
     return;
+  }
 
   const MCSchedClassDesc *SC = DAG->getSchedClass(SU);
   for (TargetSchedModel::ProcResIter
@@ -2444,6 +2448,7 @@ initResourceDelta(const ScheduleDAGMI *DAG,
     if (PI->ProcResourceIdx == Policy.DemandResIdx)
       ResDelta.DemandedResources += PI->Cycles;
   }
+  LLVM_DEBUG(dbgs() << "initResourceDelta: " << Policy.ReduceResIdx << "/" << Policy.DemandResIdx << "\n");
 }
 
 /// Set the CandPolicy given a scheduling zone given the current resources and
@@ -2930,6 +2935,8 @@ void GenericScheduler::initCandidate(SchedCandidate &Cand, SUnit *SU,
 void GenericScheduler::tryCandidate(SchedCandidate &Cand,
                                     SchedCandidate &TryCand,
                                     SchedBoundary *Zone) const {
+  LLVM_DEBUG(dbgs() << "tryCandidate!\n");
+  TryCand.initResourceDelta(DAG, SchedModel);
   // Initialize the candidate if needed.
   if (!Cand.isValid()) {
     TryCand.Reason = NodeOrder;
