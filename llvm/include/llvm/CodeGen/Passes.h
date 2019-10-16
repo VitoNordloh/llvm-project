@@ -116,12 +116,6 @@ namespace llvm {
   /// RegisterCoalescer - This pass merges live ranges to eliminate copies.
   extern char &RegisterCoalescerID;
 
-  /// GlobalScheduler - This pass schedules machine instructions globally.
-  extern char &GlobalSchedulerID;
-
-  /// MachineScheduler - This pass schedules machine instructions.
-  extern char &PermSchedulerID;
-
   /// MachineScheduler - This pass schedules machine instructions.
   extern char &MachineSchedulerID;
 

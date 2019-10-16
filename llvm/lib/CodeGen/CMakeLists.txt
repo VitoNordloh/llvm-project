@@ -33,7 +33,6 @@ add_llvm_library(LLVMCodeGen
   GCRootLowering.cpp
   GCStrategy.cpp
   GlobalMerge.cpp
-  GlobalScheduler.cpp
   IfConversion.cpp
   ImplicitNullChecks.cpp
   IndirectBrExpandPass.cpp
@@ -101,9 +100,6 @@ add_llvm_library(LLVMCodeGen
   OptimizePHIs.cpp
   ParallelCG.cpp
   PeepholeOptimizer.cpp
-  PermScheduler.cpp
-  Permutation.cpp
-  PermutationScheduler.cpp
   PHIElimination.cpp
   PHIEliminationUtils.cpp
   PostRAHazardRecognizer.cpp
@@ -123,7 +119,6 @@ add_llvm_library(LLVMCodeGen
   RegisterPressure.cpp
   RegisterScavenging.cpp
   RenameIndependentSubregs.cpp
-  Permutations.cpp
   MIRCanonicalizerPass.cpp
   RegisterUsageInfo.cpp
   RegUsageInfoCollector.cpp

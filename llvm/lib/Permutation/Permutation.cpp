@@ -1,16 +1,25 @@
 #include "llvm/CodeGen/MachineInstr.h"
-#include "llvm/CodeGen/Permutation.h"
+#include "llvm/Permutation/Permutation.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
-#include "Permutations.h"
 
 #include <iostream>
 #include <list>
-#include <stdlib.h>
+#include <cstdlib>
 #include <tuple>
 #include <vector>
 
 using namespace std;
 using namespace llvm;
+
+template <class T>
+Permutation<T>::DependencyGraph::DependencyGraph(const Permutation<T>::DependencyGraph &old) {
+    dependencies = old.dependencies;
+}
+
+template <class T>
+void Permutation<T>::DependencyGraph::clear() {
+    dependencies.clear();
+}
 
 template <class T>
 void Permutation<T>::DependencyGraph::addDependency(T dependent, T independent) {
@@ -48,6 +57,16 @@ void Permutation<T>::Schedule::scheduleInstruction(T i) {
 template <class T>
 list<T> Permutation<T>::Schedule::toList() {
     return instructions;
+}
+
+template <class T>
+Permutation<T>::InstructionSet::InstructionSet(const Permutation<T>::InstructionSet &old) {
+    instructions = old.instructions;
+}
+
+template <class T>
+void Permutation<T>::InstructionSet::clear() {
+    instructions.clear();
 }
 
 template <class T>
@@ -89,6 +108,18 @@ Permutation<T>::Permutation() {
 }
 
 template <class T>
+Permutation<T>::Permutation(const Permutation &old) {
+    dg = new Permutation::DependencyGraph(*old.dg);
+    is = new Permutation::InstructionSet(*old.is);
+}
+
+template <class T>
+void Permutation<T>::clear() {
+    dg->clear();
+    is->clear();
+}
+
+template <class T>
 void Permutation<T>::addInstruction(T inst) {
     is->addInstruction(inst);
 }
@@ -113,12 +144,11 @@ int Permutation<T>::countPermutations() {
 }
 
 template <class T>
-list <T> Permutation<T>::getPermutation(int permutation) {
+typename Permutation<T>::Schedule* Permutation<T>::getPermutation(int permutation) {
     int counter = 0;
     int stop = permutation;
     Schedule *schedule = new Schedule();
-    Schedule *result = permute(&counter, &stop, schedule);
-    return result->toList();
+    return permute(&counter, &stop, schedule);
 }
 
 template <class T>
@@ -127,12 +157,7 @@ list<T> Permutation<T>::getRandomPermutation() {
     while(schedule->instructions.size() != is->instructions.size()) {
         vector <T> avail = is->available(dg, schedule);
         int i = rand() % avail.size();
-        schedule->scheduleInstruction(avail[i]);
-
-        // Schedule instructions which have a direct dependency
-        for(auto &directInst : dg->getDirectDependencies(avail[i])) {
-            schedule->scheduleInstruction(directInst);
-        }
+        scheduleInstruction(schedule, avail[i]);
     }
     return schedule->toList();
 }
@@ -141,12 +166,9 @@ template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
     vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
-        Schedule *newSchedule = new Schedule(*schedule);
-        newSchedule->scheduleInstruction(inst);
-
-        // Schedule instructions which have a direct dependency
-        for(auto &directInst : dg->getDirectDependencies(inst)) {
-            newSchedule->scheduleInstruction(directInst);
+        auto *newSchedule = new Schedule(*schedule);
+        if(!scheduleInstruction(newSchedule, inst)) {
+            continue;
         }
 
         if (newSchedule->instructions.size() == is->instructions.size()) {
@@ -166,6 +188,24 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
         delete newSchedule;
     }
     return nullptr;
+}
+
+template <class T>
+bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
+    schedule->scheduleInstruction(inst);
+
+    // Get available instructions
+    vector<T> avail = is->available(dg, schedule);
+
+    // Schedule instructions which have a direct dependency
+    for(auto &directInst : dg->getDirectDependencies(inst)) {
+        // Is the instruction available?
+        if(find(avail.begin(), avail.end(), directInst) == avail.end()) {
+            return false;
+        }
+        scheduleInstruction(schedule, directInst);
+    }
+    return true;
 }
 
 template class Permutation<unsigned int>;

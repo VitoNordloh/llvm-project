@@ -33,7 +33,6 @@
 #include "llvm/CodeGen/MachinePassRegistry.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
-#include "llvm/CodeGen/PermutationScheduler.h"
 #include "llvm/CodeGen/RegisterClassInfo.h"
 #include "llvm/CodeGen/RegisterPressure.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
@@ -70,8 +69,6 @@
 #include <vector>
 #include <iostream>
 #include <memory>
-
-#include "Permutations.h"
 
 using namespace llvm;
 using namespace std;
@@ -160,7 +157,7 @@ public:
   void print(raw_ostream &O, const Module* = nullptr) const override;
 
 protected:
-  void scheduleRegions(ScheduleDAGInstrs *Scheduler, ScheduleDAGInstrs *PermutationScheduler, bool FixKillFlags);
+  void scheduleRegions(ScheduleDAGInstrs *Scheduler, bool FixKillFlags);
 };
 
 /// MachineScheduler runs after coalescing and before register allocation.
@@ -272,11 +269,6 @@ static cl::opt<bool> EnablePostRAMachineSched(
     "enable-post-misched",
     cl::desc("Enable the post-ra machine instruction scheduling pass."),
     cl::init(true), cl::Hidden);
-
-static cl::opt<bool> EnablePermutationMachineSched(
-    "enable-permutation-misched",
-    cl::desc("Enable permutation scheduler."),
-    cl::init(false), cl::Hidden);
 
 /// Decrement this iterator until reaching the top or a non-debug instr.
 static MachineBasicBlock::const_iterator
@@ -403,17 +395,7 @@ bool MachineScheduler::runOnMachineFunction(MachineFunction &mf) {
   // optimization level.
   ScheduleDAGInstrs *Scheduler = createMachineScheduler();
 
-  // Create the PermutationScheduler
-  /*
-  if(EnablePermutationMachineSched) {
-    LLVM_DEBUG(dbgs() << "Using permutation scheduler\n");
-    return new ScheduleDAGMILive(this, llvm::make_unique<PermutationScheduler>());
-  }*/
-
-  // Create the PermutationScheduler
-  ScheduleDAGInstrs *PermScheduler = new ScheduleDAGMILive(this, llvm::make_unique<PermutationScheduler>());
-
-  scheduleRegions(Scheduler, PermScheduler, false);
+  scheduleRegions(Scheduler, false);
 
   LLVM_DEBUG(LIS->dump());
   if (VerifyScheduling)
@@ -450,7 +432,7 @@ bool PostMachineScheduler::runOnMachineFunction(MachineFunction &mf) {
   // Instantiate the selected scheduler for this target, function, and
   // optimization level.
   ScheduleDAGInstrs *Scheduler = createPostMachineScheduler();
-  scheduleRegions(Scheduler, nullptr, true);
+  scheduleRegions(Scheduler, true);
 
   if (VerifyScheduling)
     MF->verify(this, "After post machine scheduling.");
@@ -533,27 +515,14 @@ getSchedRegions(MachineBasicBlock *MBB,
 }
 
 /// Main driver for both MachineScheduler and PostMachineScheduler.
-void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *SchedulerA,
-                                           ScheduleDAGInstrs *PermutationScheduler,
+void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *Scheduler,
                                            bool FixKillFlags) {
-  Permutations perms;
-
   // Visit all machine basic blocks.
   //
   // TODO: Visit blocks in global postorder or postorder within the bottom-up
   // loop tree. Then we can optionally compute global RegPressure.
   for (MachineFunction::iterator MBB = MF->begin(), MBBEnd = MF->end();
        MBB != MBBEnd; ++MBB) {
-
-    // Check which scheduler to use
-    ScheduleDAGInstrs* Scheduler;
-    if(PermutationScheduler != nullptr && perms.isEnabled(&*MBB)) {
-        LLVM_DEBUG(dbgs() << "Using permutation scheduler\n");
-        Scheduler = PermutationScheduler;
-    } else {
-        LLVM_DEBUG(dbgs() << "Using normal scheduler\n");
-        Scheduler = SchedulerA;
-    }
 
     Scheduler->startBlock(&*MBB);
 
@@ -625,8 +594,7 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *SchedulerA,
     if (FixKillFlags)
       Scheduler->fixupKills(*MBB);
   }
-  SchedulerA->finalizeSchedule();
-  PermutationScheduler->finalizeSchedule();
+  Scheduler->finalizeSchedule();
 }
 
 void MachineSchedulerBase::print(raw_ostream &O, const Module* m) const {

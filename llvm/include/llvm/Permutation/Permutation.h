@@ -20,6 +20,9 @@ private:
 
         list <tuple<T, T, Dep>> dependencies;
 
+        DependencyGraph() = default;
+        DependencyGraph(const DependencyGraph &old);
+        void clear();
         void addDependency(T dependent, T independent);
         void addDependency(T dependent, T independent, Dep type);
         vector<T> getDirectDependencies(T independent);
@@ -40,7 +43,12 @@ private:
 
     class InstructionSet {
     public:
+        InstructionSet() = default;
+        InstructionSet(const InstructionSet &old);
+        
         list <T> instructions;
+
+        void clear();
 
         void addInstruction(T i);
 
@@ -53,6 +61,10 @@ private:
 public:
     Permutation();
 
+    Permutation(const Permutation &old);
+
+    void clear();
+
     void addInstruction(T inst);
 
     void addDependency(T a, T b);
@@ -61,11 +73,13 @@ public:
 
     int countPermutations();
 
-    list <T> getPermutation(int permutation);
+    Schedule* getPermutation(int permutation);
 
     list<T> getRandomPermutation();
 
     Schedule *permute(int *counter, int *stop, Schedule *schedule);
+    
+    bool scheduleInstruction(Schedule *schedule, T inst);
 };
 
 #endif //LLVM_PERMUTATION_H
