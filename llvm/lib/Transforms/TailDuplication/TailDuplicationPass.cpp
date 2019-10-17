@@ -4,11 +4,11 @@
 #include "llvm/Pass.h"
 #include "llvm/PassAnalysisSupport.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Transforms/SuperblockFinder/SuperblockFinder.h"
 #include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 
 #include <list>
-#include <string>
 #include <vector>
 
 using namespace llvm;
@@ -29,24 +29,19 @@ namespace {
         void duplicate(vector<BasicBlock*>::iterator it);
 
         Function *F;
-        vector<BasicBlock*> trace;
+        vector<BasicBlock*> *trace;
     };
 
     bool TailDuplication::runOnFunction(Function &F) {
-        if(!F.getName().equals("dijkstra")) {
-            dbgs() << "Skipping " << F.getName() << "\n";
+        if(!F.getName().equals("std_eval")) {
             return false;
         }
         this->F = &F;
-        dbgs() << "Running on function " << F.getName() << "\n";
 
-        // Construct trace
-        trace.clear();
-        trace.push_back(findBasicBlock("for.body14"));
-        trace.push_back(findBasicBlock("if.then20"));
-        trace.push_back(findBasicBlock("for.inc39"));
+        // Get trace from the SuperblockFinder
+        trace = &getAnalysis<SuperblockFinder>().getSB();
 
-        for(auto BB = next(trace.begin()); BB != trace.end(); ++BB) {
+        for(auto BB = next(trace->begin()); BB != trace->end(); ++BB) {
             if(pred_size(*BB) <= 1) {
                 continue;
             }
@@ -61,6 +56,7 @@ namespace {
 
     void TailDuplication::getAnalysisUsage(AnalysisUsage &AU) const {
         AU.setPreservesCFG();
+        AU.addRequired<SuperblockFinder>();
     }
 
     BasicBlock* TailDuplication::findBasicBlock(string name) {
@@ -78,6 +74,7 @@ namespace {
         // Clone BasicBlock
         ValueToValueMapTy map;
         BasicBlock *clone = CloneBasicBlock(BB, map);
+        clone->setName(BB->getName()+"_clone");
 
         // Insert clone into function
         clone->insertInto(F, BB);

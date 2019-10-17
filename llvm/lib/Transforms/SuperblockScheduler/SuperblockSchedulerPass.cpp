@@ -10,6 +10,8 @@
 #include "llvm/PassAnalysisSupport.h"
 #include "Permutation.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Transforms/ProfileReader/ProfileReader.h"
+#include "llvm/Transforms/SuperblockFinder/SuperblockFinder.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 
 #include <fstream>
@@ -66,8 +68,6 @@ namespace {
         void getAnalysisUsage(AnalysisUsage &AU) const override;
 
     private:
-        BasicBlock* findBasicBlock(string name);
-        void findSuperblock(BasicBlock *start);
         void initSNodes();
         unsigned hasDep(Instruction *A, Instruction *B);
         void buildDepGraph();
@@ -89,15 +89,15 @@ namespace {
     };
 
     bool SuperblockScheduler::runOnFunction(Function &F) {
-        if(!F.getName().equals("dijkstra")) {
+        if(!F.getName().equals("std_eval")) {
             dbgs() << "Skipping " << F.getName() << "\n";
             return false;
         }
 
         this->F = &F;
         DI = &getAnalysis<DependenceAnalysisWrapperPass>().getDI();
+        SB = getAnalysis<SuperblockFinder>().getSB();
 
-        findSuperblock(nullptr);
         initSNodes();
         buildDepGraph();
         schedule();
@@ -109,44 +109,7 @@ namespace {
     void SuperblockScheduler::getAnalysisUsage(AnalysisUsage &AU) const {
         AU.setPreservesCFG();
         AU.addRequired<DependenceAnalysisWrapperPass>();
-    }
-
-    BasicBlock* SuperblockScheduler::findBasicBlock(string name) {
-        for(auto &BB : *F) {
-            if(BB.getName().equals(name)) {
-                return &BB;
-            }
-        }
-        return nullptr;
-    }
-
-    void SuperblockScheduler::findSuperblock(BasicBlock *start) {
-        SB.clear();
-
-        SB.push_back(findBasicBlock("for.body14"));
-        SB.push_back(findBasicBlock("if.then20"));
-        SB.push_back(findBasicBlock("for.inc39"));
-
-        return;
-
-        BasicBlock* curr = start;
-        while(true) {
-            // The block is only allowed to have one predecessor
-            if(pred_size(curr) > 1) {
-                break;
-            }
-
-            // Add the current MBB to the superblock
-            SB.push_back(curr);
-
-            // We need a successor
-            if(succ_size(curr) < 1) {
-                break;
-            }
-
-            // Update curr
-            curr = *(prev(successors(curr).end()));
-        };
+        AU.addRequired<SuperblockFinder>();
     }
 
     void SuperblockScheduler::initSNodes() {
@@ -437,6 +400,8 @@ namespace {
          * This section searches for valid permutations.
          */
         if(WritePermutations) {
+            dbgs() << pow(BBI, instI) << " possible permutations\n";
+
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
             do {
