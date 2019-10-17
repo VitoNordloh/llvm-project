@@ -89,7 +89,7 @@ namespace {
     };
 
     bool SuperblockScheduler::runOnFunction(Function &F) {
-        if(!F.getName().equals("std_eval")) {
+        if(!F.getName().equals("FastFullPelBlockMotionSearch")) {
             dbgs() << "Skipping " << F.getName() << "\n";
             return false;
         }
