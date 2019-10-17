@@ -1,5 +1,5 @@
 #include "llvm/CodeGen/MachineInstr.h"
-#include "llvm/Permutation/Permutation.h"
+#include "Permutation.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 
 #include <iostream>

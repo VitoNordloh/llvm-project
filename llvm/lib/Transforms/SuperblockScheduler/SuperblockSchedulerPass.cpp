@@ -8,7 +8,7 @@
 #include "llvm/IR/Instruction.h"
 #include "llvm/Pass.h"
 #include "llvm/PassAnalysisSupport.h"
-#include "llvm/Permutation/Permutation.h"
+#include "Permutation.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
 
