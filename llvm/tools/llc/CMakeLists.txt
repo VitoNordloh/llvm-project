@@ -7,7 +7,6 @@ set(LLVM_LINK_COMPONENTS
   IRReader
   MC
   MIRParser
-  Permutation
   ScalarOpts
   SelectionDAG
   Support
