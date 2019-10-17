@@ -18,7 +18,7 @@ using namespace std;
 static cl::opt<string> SuperblockStart("superblock-start", cl::desc("Force the start block of the superblock."));
 
 bool SuperblockFinder::runOnFunction(Function &F) {
-    if(!F.getName().equals("main")) {
+    if(!F.getName().equals("FastFullPelBlockMotionSearch")) {
         return false;
     }
 
