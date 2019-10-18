@@ -451,6 +451,7 @@ namespace {
                         mapping->insert(pair<unsigned, unsigned>(node->id, curBB));
 
                         if(isUnique) continue;
+                        if(foundPerms.empty()) isUnique = true;
                         for(auto &found : foundPerms) {
                             unsigned BBId = found->at(node->id);
                             if(BBId == curBB) {
@@ -458,7 +459,6 @@ namespace {
                                 break;
                             }
                         }
-
                     }
                 }
 
