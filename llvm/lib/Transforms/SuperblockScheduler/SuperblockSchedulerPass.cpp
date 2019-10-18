@@ -402,6 +402,7 @@ namespace {
 
             list<map<unsigned, unsigned>*> foundPerms;
 
+            srand(time(nullptr));
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
             while(k < 100000000) {
@@ -436,7 +437,6 @@ namespace {
                 dbgs() << "\n";*/
 
                 // Create random permutation
-                srand(time(nullptr));
                 auto sched = perm.getRandomPermutation();
 
                 // Create mapping of inst to BB
@@ -470,8 +470,6 @@ namespace {
                     dbgs() << "\n";
                     valid++;
                     dbgs() << "Found (" << valid << ")\n";
-                } else {
-                    dbgs() << "Alredy present\n";
                 }
 
             }
