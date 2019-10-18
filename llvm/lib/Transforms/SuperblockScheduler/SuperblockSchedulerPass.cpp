@@ -404,9 +404,10 @@ namespace {
 
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
+            srand(time(nullptr));
             while(k < 100000000) {
                 // Print counter
-                if (k % 10000 == 0) {
+                if (k % 100 == 0) {
                     dbgs() << k << "\n";
                 }
 
@@ -425,12 +426,16 @@ namespace {
                 // Create new permutation and add new dependencies
                 Permutation<unsigned> newPerm = perm;
                 for (auto &mapping : m) {
+                    dbgs() << mapping.first << "->" << mapping.second << " ";
                     SNode *inst = instMap[mapping.first];
                     SNode *startBB = BBMap[mapping.second];
                     SNode *endBB = startBB->endBB;
                     newPerm.addDependency(inst->id, startBB->id);
                     newPerm.addDependency(endBB->id, inst->id);
                 }
+                dbgs() << "\n";
+
+                k++;
 
                 // Check if the new permutation is valid
                 auto sched = newPerm.getPermutation(0);
@@ -447,6 +452,7 @@ namespace {
                         if(*found == *ids) {
                             // Permutation is already present
                             isUnique = false;
+                            dbgs() << "Already present\n";
                         }
                     }
 
@@ -461,8 +467,9 @@ namespace {
                         valid++;
                         dbgs() << "Found (" << valid << ")\n";
                     }
+                } else {
+                    dbgs() << "Not valid\n";
                 }
-                k++;
             }
             file.close();
             return;
