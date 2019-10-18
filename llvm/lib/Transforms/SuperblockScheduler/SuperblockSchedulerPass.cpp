@@ -442,20 +442,19 @@ namespace {
                 // Create mapping of inst to BB
                 unsigned curBB = 9999999;
                 auto *mapping = new map<unsigned, unsigned>();
-                bool isUnique = true;
+                bool isUnique = false;
                 for(auto &i : sched) {
-                    if(!isUnique) continue;
-
                     SNode *node = snodeMap[i];
                     if(node->type == SNode::BBStart) {
                         curBB = node->id;
                     } else if(node->type == SNode::Inst) {
                         mapping->insert(pair<unsigned, unsigned>(node->id, curBB));
 
+                        if(isUnique) continue;
                         for(auto &found : foundPerms) {
                             unsigned BBId = found->at(node->id);
                             if(BBId == curBB) {
-                                isUnique = false;
+                                isUnique = true;
                                 break;
                             }
                         }
