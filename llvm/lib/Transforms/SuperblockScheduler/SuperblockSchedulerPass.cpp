@@ -449,16 +449,14 @@ namespace {
                         curBB = node->id;
                     } else if(node->type == SNode::Inst) {
                         mapping->insert(pair<unsigned, unsigned>(node->id, curBB));
-
                         if(isUnique) continue;
                         if(foundPerms.empty()) isUnique = true;
+                        bool allUnique = true;
                         for(auto &found : foundPerms) {
                             unsigned BBId = found->at(node->id);
-                            if(BBId != curBB) {
-                                isUnique = true;
-                                break;
-                            }
+                            allUnique = allUnique && (BBId != curBB);
                         }
+                        isUnique = isUnique || allUnique;
                     }
                 }
 
