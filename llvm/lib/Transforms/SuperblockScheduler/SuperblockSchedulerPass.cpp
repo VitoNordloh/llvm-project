@@ -382,7 +382,6 @@ namespace {
         // Count Instructions and create maps
         unsigned instI = 0, BBI = 0;
         map<unsigned, SNode*> instMap, BBMap;
-        vector<unsigned> m(0);
 
         for(auto *node : snodes) {
             if(node->type == SNode::Inst) {
@@ -390,7 +389,6 @@ namespace {
                     continue;
                 }
                 instMap.insert(pair<unsigned, SNode*>(instI++, node));
-                m.push_back(0);
             } else if(node->type == SNode::BBStart) {
                 BBMap.insert(pair<unsigned, SNode*>(BBI++, node));
             }
@@ -402,45 +400,76 @@ namespace {
         if(WritePermutations) {
             dbgs() << pow(BBI, instI) << " possible permutations\n";
 
+            list<vector<unsigned>*> foundPerms;
+
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
-            do {
+            while(k < 100000000) {
+                // Print counter
                 if (k % 10000 == 0) {
                     dbgs() << k << "\n";
                 }
 
+                // Create random mapping
+                unsigned numInsts = rand() % instI + 1;
+                map<unsigned, unsigned> m;
+                for(unsigned i = 0; i < numInsts; i++) {
+                    // Choose Instruction to fix and its BasicBlock
+                    unsigned inst = rand() % instI;
+                    unsigned BB = rand() % BBI;
+
+                    // Insert into map
+                    m.insert(pair<unsigned, unsigned>(inst, BB));
+                }
+
+                // Create new permutation and add new dependencies
                 Permutation<unsigned> newPerm = perm;
-
-                // Create additional dependencies
-                unsigned instId = 0;
-                for (auto &BBId : m) {
-                    SNode *inst = instMap[instId];
-                    SNode *startBB = BBMap[BBId];
+                for (auto &mapping : m) {
+                    SNode *inst = instMap[mapping.first];
+                    SNode *startBB = BBMap[mapping.second];
                     SNode *endBB = startBB->endBB;
-
                     newPerm.addDependency(inst->id, startBB->id);
                     newPerm.addDependency(endBB->id, inst->id);
-                    instId++;
                 }
 
+                // Check if the new permutation is valid
                 auto sched = newPerm.getPermutation(0);
                 if (sched != nullptr) {
-                    for (auto &i : m) {
-                        file << i << "\t";
+                    // Create list of SNode IDs
+                    auto *ids = new vector<unsigned>(0);
+                    for(auto &i : sched->toList()) {
+                        ids->push_back(i);
                     }
-                    file << endl;
-                    valid++;
-                    dbgs() << "VALID!\n";
+
+                    // The permutation is valid, but we are only interested in new permutations
+                    bool isUnique = true;
+                    for(auto &found : foundPerms) {
+                        if(*found == *ids) {
+                            // Permutation is already present
+                            isUnique = false;
+                        }
+                    }
+
+                    if(isUnique) {
+                        foundPerms.push_back(ids);
+                        for(auto &mapping : m) {
+                            file << mapping.first << "->" << mapping.second << ",";
+                            dbgs() << mapping.first << "->" << mapping.second << " ";
+                        }
+                        file << endl;
+                        dbgs() << "\n";
+                        valid++;
+                        dbgs() << "Found (" << valid << ")\n";
+                    }
                 }
                 k++;
-            } while (inc(&m, m.begin()));
-            dbgs() << "Valid: " << valid << "\n";
+            }
             file.close();
             return;
         }
 
         // Convert PermutationMap to integer map
-        dbgs() << "PermutationMap: " << PermutationMap << "\n";
+        /*dbgs() << "PermutationMap: " << PermutationMap << "\n";
         m.clear();
         vector<string> *m2 = split(&PermutationMap, " ");
         for(auto &s : *m2) {
@@ -458,6 +487,8 @@ namespace {
             perm.addDependency(endBB->id, inst->id);
             instId++;
         }
+         */
+
         newSchedule = perm.getPermutation(0)->toList();
 
         // Traverse the new schedule bottom up and insert the instructions into

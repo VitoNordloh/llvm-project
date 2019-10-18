@@ -114,6 +114,12 @@ Permutation<T>::Permutation(const Permutation &old) {
 }
 
 template <class T>
+Permutation<T>::~Permutation() {
+    delete dg;
+    delete is;
+}
+
+template <class T>
 void Permutation<T>::clear() {
     dg->clear();
     is->clear();

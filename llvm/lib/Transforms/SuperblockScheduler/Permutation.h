@@ -63,6 +63,8 @@ public:
 
     Permutation(const Permutation &old);
 
+    ~Permutation();
+
     void clear();
 
     void addInstruction(T inst);
