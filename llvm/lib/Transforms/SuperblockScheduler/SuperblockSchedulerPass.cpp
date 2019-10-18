@@ -404,7 +404,6 @@ namespace {
 
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
-            srand(time(nullptr));
             while(k < 100000000) {
                 // Print counter
                 if (k % 100 == 0) {
@@ -437,6 +436,7 @@ namespace {
                 dbgs() << "\n";*/
 
                 // Create random permutation
+                srand(time(nullptr));
                 auto sched = perm.getRandomPermutation();
 
                 // Create mapping of inst to BB
@@ -454,7 +454,7 @@ namespace {
                         if(foundPerms.empty()) isUnique = true;
                         for(auto &found : foundPerms) {
                             unsigned BBId = found->at(node->id);
-                            if(BBId == curBB) {
+                            if(BBId != curBB) {
                                 isUnique = true;
                                 break;
                             }
