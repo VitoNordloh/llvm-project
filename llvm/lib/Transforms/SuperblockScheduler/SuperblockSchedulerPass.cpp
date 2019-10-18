@@ -400,7 +400,7 @@ namespace {
         if(WritePermutations) {
             dbgs() << pow(BBI, instI) << " possible permutations\n";
 
-            list<vector<unsigned>*> foundPerms;
+            list<map<unsigned, unsigned>*> foundPerms;
 
             ofstream file("permutations.txt", ios_base::out | ios_base::trunc);
             unsigned k = 0, valid = 0;
@@ -410,9 +410,10 @@ namespace {
                 if (k % 100 == 0) {
                     dbgs() << k << "\n";
                 }
+                k++;
 
                 // Create random mapping
-                unsigned numInsts = rand() % instI + 1;
+                /*unsigned numInsts = rand() % instI + 1;
                 map<unsigned, unsigned> m;
                 for(unsigned i = 0; i < numInsts; i++) {
                     // Choose Instruction to fix and its BasicBlock
@@ -433,43 +434,49 @@ namespace {
                     newPerm.addDependency(inst->id, startBB->id);
                     newPerm.addDependency(endBB->id, inst->id);
                 }
-                dbgs() << "\n";
+                dbgs() << "\n";*/
 
-                k++;
+                // Create random permutation
+                auto sched = perm.getRandomPermutation();
 
-                // Check if the new permutation is valid
-                auto sched = newPerm.getPermutation(0);
-                if (sched != nullptr) {
-                    // Create list of SNode IDs
-                    auto *ids = new vector<unsigned>(0);
-                    for(auto &i : sched->toList()) {
-                        ids->push_back(i);
-                    }
+                // Create mapping of inst to BB
+                unsigned curBB = 9999999;
+                auto *mapping = new map<unsigned, unsigned>();
+                bool isUnique = true;
+                for(auto &i : sched) {
+                    if(!isUnique) continue;
 
-                    // The permutation is valid, but we are only interested in new permutations
-                    bool isUnique = true;
-                    for(auto &found : foundPerms) {
-                        if(*found == *ids) {
-                            // Permutation is already present
-                            isUnique = false;
-                            dbgs() << "Already present\n";
+                    SNode *node = snodeMap[i];
+                    if(node->type == SNode::BBStart) {
+                        curBB = node->id;
+                    } else if(node->type == SNode::Inst) {
+                        mapping->insert(pair<unsigned, unsigned>(node->id, curBB));
+
+                        for(auto &found : foundPerms) {
+                            unsigned BBId = found->at(node->id);
+                            if(BBId == curBB) {
+                                isUnique = false;
+                                break;
+                            }
                         }
-                    }
 
-                    if(isUnique) {
-                        foundPerms.push_back(ids);
-                        for(auto &mapping : m) {
-                            file << mapping.first << "->" << mapping.second << ",";
-                            dbgs() << mapping.first << "->" << mapping.second << " ";
-                        }
-                        file << endl;
-                        dbgs() << "\n";
-                        valid++;
-                        dbgs() << "Found (" << valid << ")\n";
                     }
-                } else {
-                    dbgs() << "Not valid\n";
                 }
+
+                if(isUnique) {
+                    foundPerms.push_back(mapping);
+                    for(auto &m : *mapping) {
+                        file << m.first << "->" << m.second << ",";
+                        dbgs() << m.first << "->" << m.second << " ";
+                    }
+                    file << endl;
+                    dbgs() << "\n";
+                    valid++;
+                    dbgs() << "Found (" << valid << ")\n";
+                } else {
+                    dbgs() << "Alredy present\n";
+                }
+
             }
             file.close();
             return;
