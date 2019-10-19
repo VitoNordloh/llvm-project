@@ -489,8 +489,11 @@ namespace {
             perm.addDependency(inst->id, startBB->id);
             perm.addDependency(endBB->id, inst->id);
         }
+        dbgs() << "Added all dependencies\n";
 
         newSchedule = perm.getPermutation(0)->toList();
+
+        dbgs() << "Created schedule\n";
 
         // Traverse the new schedule bottom up and insert the instructions into
         // the BasicBlocks.
@@ -517,6 +520,8 @@ namespace {
                 }
             }
         }
+
+        dbgs() << "Created new schedule\n";
     }
 
     void SuperblockScheduler::dumpSchedule() {
