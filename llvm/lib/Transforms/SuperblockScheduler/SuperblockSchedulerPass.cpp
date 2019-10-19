@@ -477,26 +477,18 @@ namespace {
             return;
         }
 
-        // Convert PermutationMap to integer map
-        /*dbgs() << "PermutationMap: " << PermutationMap << "\n";
-        m.clear();
-        vector<string> *m2 = split(&PermutationMap, " ");
-        for(auto &s : *m2) {
-            m.push_back(stoi(s));
-        }
+        // Add additional dependencies
+        dbgs() << "PermutationMap: " << PermutationMap << "\n";
+        vector<string> *mapping = split(&PermutationMap, ",");
+        for(auto &mapEntry : *mapping) {
+            vector<string> *ids = split(&mapEntry, ":");
 
-        // Create additional dependencies
-        unsigned instId = 0;
-        for (auto &BBId : m) {
-            SNode *inst = instMap[instId];
-            SNode *startBB = BBMap[BBId];
+            SNode *inst = snodeMap[stoi(ids->at(0))];
+            SNode *startBB = snodeMap[stoi(ids->at(1))];
             SNode *endBB = startBB->endBB;
-
             perm.addDependency(inst->id, startBB->id);
             perm.addDependency(endBB->id, inst->id);
-            instId++;
         }
-         */
 
         newSchedule = perm.getPermutation(0)->toList();
 
