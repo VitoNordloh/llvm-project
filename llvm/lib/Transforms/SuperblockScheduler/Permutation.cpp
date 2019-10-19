@@ -130,8 +130,8 @@ Permutation<T>::~Permutation() {
 }
 
 template <class T>
-void Permutation<T>::setPrintCallback(void (*newPrintFn) (raw_ostream&, T)) {
-    printFn = newPrintFn;
+void Permutation<T>::setLabelCallback(string (*newLabelFn) (T)) {
+    labelFn = newLabelFn;
 }
 
 template <class T>
@@ -217,10 +217,8 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
 
 template <class T>
 bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
-    if(printFn != nullptr) {
-        dbgs() << "Scheduling instruction ";
-        printFn(dbgs(), inst);
-        dbgs() << "\n";
+    if(labelFn != nullptr) {
+        dbgs() << "Scheduling instruction " << labelFn(inst) << "\n";
     }
 
     schedule->scheduleInstruction(inst);
@@ -246,8 +244,7 @@ void Permutation<T>::dumpDot(string filename) {
 
     // Dump nodes
     for(auto &I : is->instructions) {
-        printFn(file, I);
-        file << " [shape=box];" << endl;
+        file << labelFn(I) << " [shape=box];" << endl;
     }
 
     // Dump dependencies
@@ -260,10 +257,7 @@ void Permutation<T>::dumpDot(string filename) {
         } else {
             file << "edge [color=red];" << endl;
         }
-        printFn(file, independent);
-        file << " -> ";
-        printFn(file, dependent);
-        file << ";" << endl;
+        file << labelFn(independent) << " -> " << labelFn(dependent) << ";" << endl;
     }
 
     file << "}";

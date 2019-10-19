@@ -58,7 +58,7 @@ private:
         vector <T> available(DependencyGraph *dg, Schedule *schedule);
     };
 
-    void (*printFn) (raw_ostream&, T) = nullptr;
+    string (*labelFn) (T) = nullptr;
     DependencyGraph *dg;
     InstructionSet *is;
 
@@ -69,7 +69,7 @@ public:
 
     ~Permutation();
 
-    void setPrintCallback(void (*newPrintFn) (raw_ostream&, T));
+    void setLabelCallback(string (*newLabelFn) (T));
 
     void clear();
 

@@ -43,8 +43,8 @@ namespace {
         return parts;
     }
 
-    void printSNode(raw_ostream &stream, unsigned id) {
-        stream << id;
+    string getNodeLabel(unsigned id) {
+        return to_string(id);
     }
 
     struct SNode {
@@ -500,7 +500,7 @@ namespace {
 
         dbgs() << "Exported\n";
 
-        perm.setPrintCallback(printSNode);
+        perm.setLabelCallback(getNodeLabel);
         newSchedule = perm.getPermutation(0)->toList();
 
         dbgs() << "Created schedule\n";
