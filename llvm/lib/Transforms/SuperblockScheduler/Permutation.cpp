@@ -192,6 +192,28 @@ int Permutation<T>::countPermutations() {
 }
 
 template <class T>
+typename Permutation<T>::Schedule* Permutation<T>::getPermutation() {
+    dbgs() << "Getting first Permutation\n";
+    Schedule *schedule = new Schedule();
+    while(schedule->instructions.size() != is->instructions.size()) {
+        // Get available instructions
+        auto avail = is->available(dg, schedule);
+        dbgs() << "  " << avail.size() << " instructions available (";
+        for(auto &inst : avail) {
+            dbgs() << labelFn(inst) << " ";
+        }
+        dbgs() << ")\n";
+
+        assert(!avail.empty() && "No available instructions");
+
+        // Schedule first instruction
+        dbgs() << "Scheduling " << labelFn(avail.front()) << "\n";
+        scheduleInstruction(schedule, avail.front());
+    }
+    return schedule;
+}
+
+template <class T>
 typename Permutation<T>::Schedule* Permutation<T>::getPermutation(int permutation) {
     dbgs() << "Getting permutation\n";
     int counter = 0;

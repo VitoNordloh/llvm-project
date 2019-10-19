@@ -85,6 +85,8 @@ public:
 
     int countPermutations();
 
+    Schedule* getPermutation();
+
     Schedule* getPermutation(int permutation);
 
     list<T> getRandomPermutation();

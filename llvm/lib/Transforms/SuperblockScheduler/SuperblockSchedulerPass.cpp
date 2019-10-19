@@ -502,7 +502,7 @@ namespace {
 
         dbgs() << "Exported\n";
 
-        newSchedule = perm.getPermutation(0)->toList();
+        newSchedule = perm.getPermutation()->toList();
 
         dbgs() << "Created schedule\n";
 
