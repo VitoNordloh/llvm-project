@@ -55,7 +55,11 @@ private:
 
         void addInstruction(T i);
 
+        bool depsFulfilled(T inst, Permutation::DependencyGraph *dg, Permutation::Schedule *schedule, list<T> additionalInsts);
+
         vector <T> available(DependencyGraph *dg, Schedule *schedule);
+
+        bool directDependenciesFulfilled(T inst, DependencyGraph *dg, Schedule *schedule, list<T> previous);
     };
 
     string (*labelFn) (T) = nullptr;

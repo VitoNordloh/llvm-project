@@ -85,26 +85,53 @@ void Permutation<T>::InstructionSet::addInstruction(T i) {
 }
 
 template <class T>
+bool Permutation<T>::InstructionSet::depsFulfilled(T inst, Permutation::DependencyGraph *dg, Permutation::Schedule *schedule, list<T> additionalInsts) {
+    bool valid = true;
+    for (auto &dep : dg->dependencies) {
+        T a = get<0>(dep);
+        T b = get<1>(dep);
+        if (a != inst) continue;
+
+        bool inSchedule = true;
+        if (find(schedule->instructions.begin(), schedule->instructions.end(), b) ==
+            schedule->instructions.end()) {
+            inSchedule = false;
+        }
+
+        bool inAdditional = true;
+        if (find(additionalInsts.begin(), additionalInsts.end(), b) ==
+            schedule->instructions.end()) {
+            inAdditional = false;
+        }
+
+        valid = valid && (inSchedule || inAdditional);
+    }
+
+    // There are also direct dependencies! An instruction can only be scheduled,
+    // if the following direct dependencies can be scheduled
+    bool directDepsFulfilled = true;
+    vector<T> directDeps = dg->getDirectDependencies(inst);
+    list<T> additionalInstsCopy = additionalInsts;
+    additionalInstsCopy.push_back(inst);
+    for(auto &directDep : directDeps) {
+        directDepsFulfilled = directDepsFulfilled && depsFulfilled(directDep, dg, schedule, additionalInstsCopy);
+    }
+
+    return valid && directDepsFulfilled;
+}
+
+template <class T>
 vector <T> Permutation<T>::InstructionSet::available(Permutation::DependencyGraph *dg, Permutation::Schedule *schedule) {
     vector <T> avail;
     for (auto &inst : instructions) {
+        // Was the instruction already scheduled?
         if (find(schedule->instructions.begin(), schedule->instructions.end(), inst) !=
             schedule->instructions.end()) {
             continue;
         }
 
-        bool valid = true;
-        for (auto &dep : dg->dependencies) {
-            T a = get<0>(dep);
-            T b = get<1>(dep);
-            if (a != inst) continue;
-
-            if (find(schedule->instructions.begin(), schedule->instructions.end(), b) ==
-                schedule->instructions.end()) {
-                valid = false;
-            }
-        }
-        if (valid) {
+        // Are all deps fulfilled?
+        if(depsFulfilled(inst, dg, schedule, list<T>(0))) {
             avail.push_back(inst);
         }
     }
@@ -220,7 +247,6 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
     if(labelFn != nullptr) {
         dbgs() << "Scheduling instruction " << labelFn(inst) << "\n";
     }
-
     schedule->scheduleInstruction(inst);
 
     // Get available instructions
@@ -228,8 +254,10 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
 
     // Schedule instructions which have a direct dependency
     for(auto &directInst : dg->getDirectDependencies(inst)) {
+        dbgs() << "  Direct dependency: " << labelFn(directInst) << "\n";
         // Is the instruction available?
         if(find(avail.begin(), avail.end(), directInst) == avail.end()) {
+            dbgs() << "    Not available";
             return false;
         }
         scheduleInstruction(schedule, directInst);
@@ -239,7 +267,7 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
 
 template <class T>
 void Permutation<T>::dumpDot(string filename) {
-    ofstream file("graph.dot", ios_base::out | ios_base::trunc);
+    ofstream file(filename, ios_base::out | ios_base::trunc);
     file << "digraph G {" << endl;
 
     // Dump nodes
