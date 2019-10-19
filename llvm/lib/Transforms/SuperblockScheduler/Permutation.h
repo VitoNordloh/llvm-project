@@ -1,6 +1,7 @@
 #ifndef LLVM_PERMUTATION_H
 #define LLVM_PERMUTATION_H
 
+#include <string>
 #include <tuple>
 #include <list>
 #include <vector>
@@ -87,6 +88,8 @@ public:
     Schedule *permute(int *counter, int *stop, Schedule *schedule);
     
     bool scheduleInstruction(Schedule *schedule, T inst);
+
+    void dumpDot(string filename);
 };
 
 #endif //LLVM_PERMUTATION_H

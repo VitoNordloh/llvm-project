@@ -496,6 +496,10 @@ namespace {
         }
         dbgs() << "Added all dependencies\n";
 
+        perm.dumpDot("graph.dot");
+
+        dbgs() << "Exported\n";
+
         perm.setPrintCallback(printSNode);
         newSchedule = perm.getPermutation(0)->toList();
 

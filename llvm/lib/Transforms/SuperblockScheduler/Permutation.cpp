@@ -6,8 +6,10 @@
 #include "Permutation.h"
 
 #include <cstdlib>
+#include <fstream>
 #include <iostream>
 #include <list>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -184,7 +186,7 @@ list<T> Permutation<T>::getRandomPermutation() {
 
 template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
-    dbgs() << "Counter: " << *counter << " / Stop: " << *stop << "\n";
+    dbgs() << "Counter: " << *counter << " / Stop: " << *stop << " (" << is->instructions.size() << "/" << schedule->instructions.size() << ")\n";
 
     vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
@@ -235,6 +237,37 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
         scheduleInstruction(schedule, directInst);
     }
     return true;
+}
+
+template <class T>
+void Permutation<T>::dumpDot(string filename) {
+    ofstream file(filename.data(), ios_base::out | ios_base::trunc);
+    file << "digraph G {" << endl;
+
+    // Dump nodes
+    for(auto &I : is->instructions) {
+        printFn(file, I);
+        file << " [shape=box];" << endl;
+    }
+
+    // Dump dependencies
+    for(auto &dep : dg->dependencies) {
+        T dependent = get<0>(dep);
+        T independent = get<1>(dep);
+        unsigned type = get<2>(dep);
+        if(type == DependencyGraph::NORMAL) {
+            file << "edge [color=black];" << endl;
+        } else {
+            file << "edge [color=red];" << endl;
+        }
+        printFn(file, independent);
+        file << " -> ";
+        printFn(file, dependent);
+        file << ";" << endl;
+    }
+
+    file << "}";
+    file.close();
 }
 
 template class Permutation<unsigned int>;
