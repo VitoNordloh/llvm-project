@@ -239,7 +239,7 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
 
 template <class T>
 void Permutation<T>::dumpDot(string filename) {
-    ofstream file(filename.data(), ios_base::out | ios_base::trunc);
+    ofstream file("graph.dot", ios_base::out | ios_base::trunc);
     file << "digraph G {" << endl;
 
     // Dump nodes
