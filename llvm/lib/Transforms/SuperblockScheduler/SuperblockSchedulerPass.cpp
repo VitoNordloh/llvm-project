@@ -496,11 +496,12 @@ namespace {
         }
         dbgs() << "Added all dependencies\n";
 
+        perm.setLabelCallback(getNodeLabel);
+
         perm.dumpDot("graph.dot");
 
         dbgs() << "Exported\n";
 
-        perm.setLabelCallback(getNodeLabel);
         newSchedule = perm.getPermutation(0)->toList();
 
         dbgs() << "Created schedule\n";
