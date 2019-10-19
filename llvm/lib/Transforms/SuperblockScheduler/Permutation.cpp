@@ -151,6 +151,7 @@ int Permutation<T>::countPermutations() {
 
 template <class T>
 typename Permutation<T>::Schedule* Permutation<T>::getPermutation(int permutation) {
+    cout << "Getting permutation" << endl;
     int counter = 0;
     int stop = permutation;
     Schedule *schedule = new Schedule();
