@@ -95,7 +95,7 @@ public:
     
     bool scheduleInstruction(Schedule *schedule, T inst);
 
-    void dumpDot(string filename);
+    void dumpDot(string filename, list<T> nodesToExclude);
 };
 
 #endif //LLVM_PERMUTATION_H

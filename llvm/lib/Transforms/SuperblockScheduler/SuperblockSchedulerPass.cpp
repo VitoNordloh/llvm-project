@@ -498,7 +498,7 @@ namespace {
 
         perm.setLabelCallback(getNodeLabel);
 
-        perm.dumpDot("graph.dot");
+        perm.dumpDot("graph.dot", list<unsigned>(0));
 
         dbgs() << "Exported\n";
 

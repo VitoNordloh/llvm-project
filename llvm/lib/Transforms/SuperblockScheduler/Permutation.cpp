@@ -195,6 +195,7 @@ template <class T>
 typename Permutation<T>::Schedule* Permutation<T>::getPermutation() {
     dbgs() << "Getting first Permutation\n";
     Schedule *schedule = new Schedule();
+    unsigned i = 0;
     while(schedule->instructions.size() != is->instructions.size()) {
         // Get available instructions
         auto avail = is->available(dg, schedule);
@@ -209,6 +210,9 @@ typename Permutation<T>::Schedule* Permutation<T>::getPermutation() {
         // Schedule first instruction
         dbgs() << "Scheduling " << labelFn(avail.front()) << "\n";
         scheduleInstruction(schedule, avail.front());
+
+        // Dump graph
+        dumpDot("graph_" + to_string(++i) + ".dot", schedule->toList());
     }
     return schedule;
 }
@@ -288,19 +292,27 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
 }
 
 template <class T>
-void Permutation<T>::dumpDot(string filename) {
+void Permutation<T>::dumpDot(string filename, list<T> nodesToExclude) {
     ofstream file(filename, ios_base::out | ios_base::trunc);
     file << "digraph G {" << endl;
 
     // Dump nodes
     for(auto &I : is->instructions) {
-        file << labelFn(I) << " [shape=box];" << endl;
+        if(find(nodesToExclude.begin(), nodesToExclude.end(), I) == nodesToExclude.end()) {
+            file << labelFn(I) << " [shape=box];" << endl;
+        }
     }
 
     // Dump dependencies
     for(auto &dep : dg->dependencies) {
         T dependent = get<0>(dep);
         T independent = get<1>(dep);
+
+        if(find(nodesToExclude.begin(), nodesToExclude.end(), independent) != nodesToExclude.end() ||
+            find(nodesToExclude.begin(), nodesToExclude.end(), dependent) != nodesToExclude.end()) {
+            continue;
+        }
+
         unsigned type = get<2>(dep);
         if(type == DependencyGraph::NORMAL) {
             file << "edge [color=black];" << endl;
