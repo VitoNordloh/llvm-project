@@ -92,16 +92,16 @@ bool Permutation<T>::InstructionSet::depsFulfilled(T inst, Permutation::Dependen
         T b = get<1>(dep);
         if (a != inst) continue;
 
-        bool inSchedule = true;
-        if (find(schedule->instructions.begin(), schedule->instructions.end(), b) ==
+        bool inSchedule = false;
+        if (find(schedule->instructions.begin(), schedule->instructions.end(), b) !=
             schedule->instructions.end()) {
-            inSchedule = false;
+            inSchedule = true;
         }
 
-        bool inAdditional = true;
-        if (find(additionalInsts.begin(), additionalInsts.end(), b) ==
-            schedule->instructions.end()) {
-            inAdditional = false;
+        bool inAdditional = false;
+        if (find(additionalInsts.begin(), additionalInsts.end(), b) !=
+            additionalInsts.end()) {
+            inAdditional = true;
         }
 
         valid = valid && (inSchedule || inAdditional);
