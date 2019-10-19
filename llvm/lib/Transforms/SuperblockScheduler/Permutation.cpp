@@ -170,6 +170,8 @@ list<T> Permutation<T>::getRandomPermutation() {
 
 template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
+    cout << "Counter: " << *counter << " / Stop: " << *stop << endl;
+
     vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
         auto *newSchedule = new Schedule(*schedule);
