@@ -1,6 +1,8 @@
 #include "llvm/CodeGen/MachineInstr.h"
-#include "Permutation.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
+#include "llvm/Support/Debug.h"
+
+#include "Permutation.h"
 
 #include <iostream>
 #include <list>
@@ -151,7 +153,7 @@ int Permutation<T>::countPermutations() {
 
 template <class T>
 typename Permutation<T>::Schedule* Permutation<T>::getPermutation(int permutation) {
-    cout << "Getting permutation" << endl;
+    dbgs() << "Getting permutation\n";
     int counter = 0;
     int stop = permutation;
     Schedule *schedule = new Schedule();
@@ -171,7 +173,7 @@ list<T> Permutation<T>::getRandomPermutation() {
 
 template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
-    cout << "Counter: " << *counter << " / Stop: " << *stop << endl;
+    dbgs() << "Counter: " << *counter << " / Stop: " << *stop << "\n";
 
     vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
