@@ -4,6 +4,7 @@
 #include <tuple>
 #include <list>
 #include <vector>
+
 #include "llvm/CodeGen/ScheduleDAG.h"
 
 using namespace std;
@@ -37,6 +38,7 @@ private:
         Schedule(Schedule &schedule);
 
         void scheduleInstruction(T i);
+        bool isScheduled(T i);
 
         list<T> toList();
     };
@@ -55,6 +57,7 @@ private:
         vector <T> available(DependencyGraph *dg, Schedule *schedule);
     };
 
+    void (*printFn) (raw_ostream&, T) = nullptr;
     DependencyGraph *dg;
     InstructionSet *is;
 
@@ -64,6 +67,8 @@ public:
     Permutation(const Permutation &old);
 
     ~Permutation();
+
+    void setPrintCallback(void (*newPrintFn) (raw_ostream&, T));
 
     void clear();
 

@@ -10,6 +10,7 @@
 #include "llvm/PassAnalysisSupport.h"
 #include "Permutation.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/ProfileReader/ProfileReader.h"
 #include "llvm/Transforms/SuperblockFinder/SuperblockFinder.h"
 #include "llvm/Transforms/Utils/SSAUpdater.h"
@@ -40,6 +41,10 @@ namespace {
         }
         parts->push_back(s->substr(previous, current-previous));
         return parts;
+    }
+
+    void printSNode(raw_ostream &stream, unsigned id) {
+        stream << id;
     }
 
     struct SNode {
@@ -491,6 +496,7 @@ namespace {
         }
         dbgs() << "Added all dependencies\n";
 
+        perm.setPrintCallback(printSNode);
         newSchedule = perm.getPermutation(0)->toList();
 
         dbgs() << "Created schedule\n";

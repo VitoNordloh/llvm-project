@@ -1,12 +1,13 @@
 #include "llvm/CodeGen/MachineInstr.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/raw_ostream.h"
 
 #include "Permutation.h"
 
+#include <cstdlib>
 #include <iostream>
 #include <list>
-#include <cstdlib>
 #include <tuple>
 #include <vector>
 
@@ -54,6 +55,11 @@ Permutation<T>::Schedule::Schedule(Permutation::Schedule &schedule) {
 template <class T>
 void Permutation<T>::Schedule::scheduleInstruction(T i) {
     instructions.push_back(i);
+}
+
+template <class T>
+bool Permutation<T>::Schedule::isScheduled(T i) {
+    return find(instructions.begin(), instructions.end(), i) != instructions.end();
 }
 
 template <class T>
@@ -122,6 +128,11 @@ Permutation<T>::~Permutation() {
 }
 
 template <class T>
+void Permutation<T>::setPrintCallback(void (*newPrintFn) (raw_ostream&, T)) {
+    printFn = newPrintFn;
+}
+
+template <class T>
 void Permutation<T>::clear() {
     dg->clear();
     is->clear();
@@ -179,6 +190,7 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
     for (auto &inst : avail) {
         auto *newSchedule = new Schedule(*schedule);
         if(!scheduleInstruction(newSchedule, inst)) {
+            delete newSchedule;
             continue;
         }
 
@@ -203,6 +215,12 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
 
 template <class T>
 bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
+    if(printFn != nullptr) {
+        dbgs() << "Scheduling instruction ";
+        printFn(dbgs(), inst);
+        dbgs() << "\n";
+    }
+
     schedule->scheduleInstruction(inst);
 
     // Get available instructions
