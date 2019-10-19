@@ -219,7 +219,6 @@ typename Permutation<T>::Schedule* Permutation<T>::getPermutation() {
 
 template <class T>
 typename Permutation<T>::Schedule* Permutation<T>::getPermutation(int permutation) {
-    dbgs() << "Getting permutation\n";
     int counter = 0;
     int stop = permutation;
     Schedule *schedule = new Schedule();
@@ -239,8 +238,6 @@ list<T> Permutation<T>::getRandomPermutation() {
 
 template <class T>
 typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *stop, Permutation::Schedule *schedule) {
-    dbgs() << "Counter: " << *counter << " / Stop: " << *stop << " (" << is->instructions.size() << "/" << schedule->instructions.size() << ")\n";
-
     vector <T> avail = is->available(dg, schedule);
     for (auto &inst : avail) {
         auto *newSchedule = new Schedule(*schedule);
@@ -280,10 +277,14 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
 
     // Schedule instructions which have a direct dependency
     for(auto &directInst : dg->getDirectDependencies(inst)) {
-        dbgs() << "  Direct dependency: " << labelFn(directInst) << "\n";
+        if(labelFn != nullptr) {
+            dbgs() << "  Direct dependency: " << labelFn(directInst) << "\n";
+        }
         // Is the instruction available?
         if(find(avail.begin(), avail.end(), directInst) == avail.end()) {
-            dbgs() << "    Not available";
+            if(labelFn != nullptr) {
+                dbgs() << "    Not available";
+            }
             return false;
         }
         scheduleInstruction(schedule, directInst);
