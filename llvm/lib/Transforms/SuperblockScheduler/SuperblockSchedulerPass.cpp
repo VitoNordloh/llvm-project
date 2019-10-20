@@ -344,6 +344,7 @@ namespace {
 
                 // Clone instruction
                 Instruction *clone2 = node->instr->clone();
+                clone2->setName("succ_clone_" + node->instr->getName());
                 clone2->insertBefore(&succ->front());
                 insertedCopies.push_back(clone2);
             }
@@ -358,6 +359,7 @@ namespace {
         // Insert a copy of the instruction right above the original one. This makes it easier
         // to update all uses to the correct def.
         Instruction *clone = node->instr->clone();
+        clone->setName("def_clone_" + node->instr->getName());
         clone->insertBefore(node->instr);
         insertedCopies.push_back(clone);
 
