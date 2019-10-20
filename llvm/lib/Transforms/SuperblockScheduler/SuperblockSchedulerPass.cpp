@@ -559,7 +559,7 @@ namespace {
         }
 
         if(snode->type == SNode::BBStart) {
-            dbgs() << "==== " << snode->BBId << " ==== " << first << "\n";
+            dbgs() << "==== " << snode->BBId << " ==== " << first << " (Preds: " << pred_size(snode->BB) << ", Succs: " << succ_size(snode->BB) << ")\n";
         } else if(snode->type == SNode::BBEnd) {
             dbgs() << "#### " << snode->BBId << " #### " << last << "\n\n";
         } else {
