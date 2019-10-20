@@ -490,9 +490,19 @@ namespace {
         for(auto &mapEntry : *mapping) {
             vector<string> *ids = split(&mapEntry, ":");
 
-            SNode *inst = snodeMap[stoi(ids->at(0))];
-            SNode *startBB = snodeMap[stoi(ids->at(1))];
+            unsigned instId = stoi(ids->at(0));
+            unsigned startBBId = stoi(ids->at(1));
+
+            dbgs() << "Getting " << instId << ":" << startBBId << "\n";
+
+            SNode *inst = snodeMap[instId];
+            SNode *startBB = snodeMap[startBBId];
             SNode *endBB = startBB->endBB;
+
+            assert(inst != nullptr && "Inst is null");
+            assert(startBB != nullptr && "startBB is null");
+            assert(endBB != nullptr && "endBB is null");
+
             perm.addDependency(inst->id, startBB->id);
             perm.addDependency(endBB->id, inst->id);
         }
