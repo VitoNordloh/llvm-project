@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <map>
+#include <string>
 
 using namespace llvm;
 using namespace std;
@@ -23,6 +24,19 @@ bool SuperblockFinder::runOnFunction(Function &F) {
     }
 
     SB.clear();
+
+    this->F = &F;
+
+    SB.push_back(findBasicBlock("for.body"));
+    SB.push_back(findBasicBlock("if.then62"));
+    SB.push_back(findBasicBlock("for.inc"));
+
+    dbgs() << "Using const Superblock:\n";
+    for(auto &BB : SB) {
+        dbgs() << "  " << BB->getName() << "\n";
+    }
+
+    return false;
 
     // Get BasicBlock Frequency
     map<BasicBlock*, unsigned> *freqMap = &getAnalysis<ProfileReader>().getBBFreq();
@@ -128,6 +142,14 @@ void SuperblockFinder::getAnalysisUsage(AnalysisUsage &AU) const {
 
 vector<BasicBlock*> &SuperblockFinder::getSB() {
     return SB;
+}
+
+BasicBlock *SuperblockFinder::findBasicBlock(const string &name) {
+    for(auto &BB : *F) {
+        if(BB.getName().equals(name)) {
+            return &BB;
+        }
+    }
 }
 
 char SuperblockFinder::ID = 0;

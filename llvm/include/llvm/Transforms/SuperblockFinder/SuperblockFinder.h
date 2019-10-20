@@ -2,6 +2,8 @@
 #include "llvm/IR/Function.h"
 #include "llvm/Pass.h"
 
+#include <string>
+
 using namespace llvm;
 using namespace std;
 
@@ -17,6 +19,9 @@ struct SuperblockFinder : FunctionPass {
     vector<BasicBlock*> &getSB();
 
 private:
+    BasicBlock* findBasicBlock(const string &name);
+
+    Function *F;
     vector<BasicBlock*> SB;
 };
 
