@@ -405,6 +405,9 @@ namespace {
          * This section searches for valid permutations.
          */
         if(WritePermutations) {
+            dbgs() << "Number of permutations: " << perm.countPermutations() << "\n";
+            return;
+
             dbgs() << pow(BBI, instI) << " possible permutations\n";
 
             list<map<unsigned, unsigned>*> foundPerms;
