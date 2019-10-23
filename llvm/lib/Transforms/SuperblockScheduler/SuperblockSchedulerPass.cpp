@@ -344,7 +344,7 @@ namespace {
 
                 // Clone instruction
                 Instruction *clone2 = node->instr->clone();
-                clone2->insertBefore(&succ->front());
+                clone2->insertBefore(succ->getFirstNonPHIOrDbg());
                 insertedCopies.push_back(clone2);
             }
         }
