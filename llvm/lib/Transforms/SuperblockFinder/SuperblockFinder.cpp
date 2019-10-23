@@ -27,9 +27,9 @@ bool SuperblockFinder::runOnFunction(Function &F) {
 
     this->F = &F;
 
-    SB.push_back(findBasicBlock("for.body"));
-    SB.push_back(findBasicBlock("if.then62"));
-    SB.push_back(findBasicBlock("for.inc"));
+    SB.push_back(findBasicBlock("for.body14"));
+    SB.push_back(findBasicBlock("if.then20"));
+    SB.push_back(findBasicBlock("for.inc39"));
 
     dbgs() << "Using const Superblock:\n";
     for(auto &BB : SB) {
