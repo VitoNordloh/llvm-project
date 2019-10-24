@@ -499,6 +499,7 @@ namespace {
 
             assert(inst != nullptr && "Inst is null");
             assert(startBB != nullptr && "startBB is null");
+            dbgs() << "Checking endBB of " << startBB->BB->getName() << "\n";
             assert(endBB != nullptr && "endBB is null");
 
             perm.addDependency(inst->id, startBB->id);
