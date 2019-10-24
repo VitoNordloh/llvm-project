@@ -42,6 +42,7 @@ namespace {
         trace = &getAnalysis<SuperblockFinder>().getSB();
 
         for(auto BB = next(trace->begin()); BB != trace->end(); ++BB) {
+            dbgs() << "Checking '" << (*BB)->getName() << "'\n";
             if(pred_size(*BB) <= 1) {
                 continue;
             }
@@ -107,6 +108,8 @@ namespace {
                 for(unsigned i = 0; i < phi.getNumIncomingValues(); i++) {
                     BasicBlock *incomingBlock = phi.getIncomingBlock(i);
                     if(incomingBlock == BB) {
+                        dbgs() << "Checking " << phi.getIncomingValue(i)->getName() << " in " << succ->getName() << "\n";
+                        assert(map[phi.getIncomingValue(i)] != nullptr && "Is null");
                         phi.addIncoming(map[phi.getIncomingValue(i)], clone);
                     }
                 }

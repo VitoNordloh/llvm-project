@@ -17,6 +17,7 @@ struct SuperblockFinder : FunctionPass {
     bool runOnFunction(Function &F) override;
     void getAnalysisUsage(AnalysisUsage &AU) const override;
     vector<BasicBlock*> &getSB();
+    void verifySB();
 
 private:
     BasicBlock* findBasicBlock(const string &name);

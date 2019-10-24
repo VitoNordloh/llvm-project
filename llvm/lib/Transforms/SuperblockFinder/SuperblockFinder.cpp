@@ -29,8 +29,9 @@ bool SuperblockFinder::runOnFunction(Function &F) {
 
     SB.push_back(findBasicBlock("for.cond109.preheader.i"));
     SB.push_back(findBasicBlock("vector.body"));
-    SB.push_back(findBasicBlock("for.inc203.i"));
-    SB.push_back(findBasicBlock("for.inc206.i"));
+    // SB.push_back(findBasicBlock("for.inc203.i"));
+
+    verifySB();
 
     dbgs() << "Using const Superblock:\n";
     for(auto &BB : SB) {
@@ -143,6 +144,15 @@ void SuperblockFinder::getAnalysisUsage(AnalysisUsage &AU) const {
 
 vector<BasicBlock*> &SuperblockFinder::getSB() {
     return SB;
+}
+
+void SuperblockFinder::verifySB() {
+    // Backedges are not allowed
+    for(auto it = SB.begin(); it != SB.end(); ++it) {
+        for(auto BB : successors(*it)) {
+            assert(find(SB.begin(), it, BB) == it && "Backedges are not allowed!");
+        }
+    }
 }
 
 BasicBlock *SuperblockFinder::findBasicBlock(const string &name) {
