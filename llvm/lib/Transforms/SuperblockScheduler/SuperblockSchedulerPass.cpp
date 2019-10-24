@@ -500,6 +500,13 @@ namespace {
             assert(inst != nullptr && "Inst is null");
             assert(startBB != nullptr && "startBB is null");
             dbgs() << "Checking endBB of " << startBB->BB->getName() << "\n";
+            if(startBB->type == SNode::Inst) {
+                dbgs() << "Is Inst\n";
+            } else if(startBB->type == SNode::BBStart) {
+                dbgs() << "Is Start\n";
+            } else if(startBB->type == SNode::BBEnd) {
+                dbgs() << "Is end\n";
+            }
             assert(endBB != nullptr && "endBB is null");
 
             perm.addDependency(inst->id, startBB->id);
