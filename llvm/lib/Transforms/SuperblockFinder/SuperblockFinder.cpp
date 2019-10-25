@@ -148,7 +148,7 @@ vector<BasicBlock*> &SuperblockFinder::getSB() {
 
 void SuperblockFinder::verifySB() {
     // Backedges are not allowed
-    for(auto it = SB.begin(); it != SB.end(); ++it) {
+    for(auto it = SB.begin(); it != prev(SB.end()); ++it) {
         for(auto BB : successors(*it)) {
             assert(find(SB.begin(), it, BB) == it && "Backedges are not allowed!");
         }
