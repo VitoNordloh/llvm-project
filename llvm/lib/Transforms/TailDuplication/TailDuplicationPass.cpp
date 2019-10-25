@@ -33,7 +33,7 @@ namespace {
     };
 
     bool TailDuplication::runOnFunction(Function &F) {
-        if(!F.getName().equals("main")) {
+        if(!F.getName().equals("quantum_toffoli")) {
             return false;
         }
         this->F = &F;

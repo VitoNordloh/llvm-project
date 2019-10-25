@@ -19,7 +19,7 @@ using namespace std;
 static cl::opt<string> SuperblockStart("superblock-start", cl::desc("Force the start block of the superblock."));
 
 bool SuperblockFinder::runOnFunction(Function &F) {
-    if(!F.getName().equals("main")) {
+    if(!F.getName().equals("quantum_toffoli")) {
         return false;
     }
 
@@ -27,9 +27,9 @@ bool SuperblockFinder::runOnFunction(Function &F) {
 
     this->F = &F;
 
-    SB.push_back(findBasicBlock("for.cond109.preheader.i"));
-    SB.push_back(findBasicBlock("vector.body"));
-    // SB.push_back(findBasicBlock("for.inc203.i"));
+    SB.push_back(findBasicBlock("for.body"));
+    SB.push_back(findBasicBlock("for.inc"));
+    SB.push_back(findBasicBlock("for.inc.1"));
 
     verifySB();
 
