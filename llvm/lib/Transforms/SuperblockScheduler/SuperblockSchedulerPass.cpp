@@ -415,34 +415,16 @@ namespace {
                 if (k % 100 == 0) {
                     dbgs() << k << "\n";
                 }
+
+                // Get permutation
+                auto schedTmp = perm.getPermutation(k); //perm.getRandomPermutation();
+                if(schedTmp == nullptr) {
+                    break;
+                }
+                auto sched = schedTmp->toList();
+
+                // Inc k
                 k++;
-
-                // Create random mapping
-                /*unsigned numInsts = rand() % instI + 1;
-                map<unsigned, unsigned> m;
-                for(unsigned i = 0; i < numInsts; i++) {
-                    // Choose Instruction to fix and its BasicBlock
-                    unsigned inst = rand() % instI;
-                    unsigned BB = rand() % BBI;
-
-                    // Insert into map
-                    m.insert(pair<unsigned, unsigned>(inst, BB));
-                }
-
-                // Create new permutation and add new dependencies
-                Permutation<unsigned> newPerm = perm;
-                for (auto &mapping : m) {
-                    dbgs() << mapping.first << "->" << mapping.second << " ";
-                    SNode *inst = instMap[mapping.first];
-                    SNode *startBB = BBMap[mapping.second];
-                    SNode *endBB = startBB->endBB;
-                    newPerm.addDependency(inst->id, startBB->id);
-                    newPerm.addDependency(endBB->id, inst->id);
-                }
-                dbgs() << "\n";*/
-
-                // Create random permutation
-                auto sched = perm.getRandomPermutation();
 
                 // Create mapping of inst to BB
                 unsigned curBB = 9999999;
