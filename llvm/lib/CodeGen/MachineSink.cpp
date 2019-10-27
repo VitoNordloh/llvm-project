@@ -346,14 +346,6 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 }
 
 bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
-  if(MBB.getParent()->getName().equals("dijkstra")) {
-      if(MBB.getName().equals("for.body14") ||
-          MBB.getName().equals("if.then20") ||
-          MBB.getName().equals("for.inc39")) {
-          return false;
-      }
-  }
-
   // Can't sink anything out of a block that has less than two successors.
   if (MBB.succ_size() <= 1 || MBB.empty()) return false;
 
