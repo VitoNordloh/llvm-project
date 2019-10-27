@@ -346,10 +346,10 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 }
 
 bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
-  if(MBB.getParent()->getName().equals("quantum_toffoli")) {
-      if(MBB.getName().equals("for.body") ||
-          MBB.getName().equals("for.inc") ||
-          MBB.getName().equals("for.inc.1")) {
+  if(MBB.getParent()->getName().equals("dijkstra")) {
+      if(MBB.getName().equals("for.body14") ||
+          MBB.getName().equals("if.then20") ||
+          MBB.getName().equals("for.inc39")) {
           return false;
       }
   }
