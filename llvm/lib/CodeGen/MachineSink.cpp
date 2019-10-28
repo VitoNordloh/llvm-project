@@ -348,9 +348,9 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
     if(MBB.getParent()->getName().equals("pat_search")) {
         if (MBB.getName().equals("do.body") ||
-            MBB.getName().equals("do.body1") ||
-            MBB.getName().equals("do.body2") ||
-            MBB.getName().equals("do.body3")) {
+            MBB.getName().equals("do.body.1") ||
+            MBB.getName().equals("do.body.2") ||
+            MBB.getName().equals("do.body.3")) {
                 return false;
         }
     }

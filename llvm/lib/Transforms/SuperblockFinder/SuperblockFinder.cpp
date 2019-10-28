@@ -28,9 +28,9 @@ bool SuperblockFinder::runOnFunction(Function &F) {
     this->F = &F;
 
     SB.push_back(findBasicBlock("do.body"));
-    SB.push_back(findBasicBlock("do.body1"));
-    SB.push_back(findBasicBlock("do.body2"));
-    SB.push_back(findBasicBlock("do.body3"));
+    SB.push_back(findBasicBlock("do.body.1"));
+    SB.push_back(findBasicBlock("do.body.2"));
+    SB.push_back(findBasicBlock("do.body.3"));
 
     verifySB();
 
