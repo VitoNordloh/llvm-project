@@ -94,7 +94,7 @@ namespace {
     };
 
     bool SuperblockScheduler::runOnFunction(Function &F) {
-        if(!F.getName().equals("dijkstra")) {
+        if(!F.getName().equals("pat_search")) {
             dbgs() << "Skipping " << F.getName() << "\n";
             return false;
         }

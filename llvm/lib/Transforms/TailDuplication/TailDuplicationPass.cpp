@@ -33,7 +33,7 @@ namespace {
     };
 
     bool TailDuplication::runOnFunction(Function &F) {
-        if(!F.getName().equals("dijkstra")) {
+        if(!F.getName().equals("pat_search")) {
             return false;
         }
         this->F = &F;

@@ -346,6 +346,15 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 }
 
 bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
+    if(MBB.getParent()->getName().equals("pat_search")) {
+        if (MBB.getName().equals("do.body") ||
+            MBB.getName().equals("do.body1") ||
+            MBB.getName().equals("do.body2") ||
+            MBB.getName().equals("do.body3")) {
+                return false;
+        }
+    }
+
   // Can't sink anything out of a block that has less than two successors.
   if (MBB.succ_size() <= 1 || MBB.empty()) return false;
 
