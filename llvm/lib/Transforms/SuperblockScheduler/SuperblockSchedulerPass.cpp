@@ -417,11 +417,11 @@ namespace {
                 }
 
                 // Get permutation
-                auto schedTmp = perm.getPermutation(k); //perm.getRandomPermutation();
-                if(schedTmp == nullptr) {
+                auto sched = perm.getRandomPermutation();
+                /*if(schedTmp == nullptr) {
                     break;
-                }
-                auto sched = schedTmp->toList();
+                }*/
+                // auto sched = schedTmp->toList();
 
                 // Inc k
                 k++;
