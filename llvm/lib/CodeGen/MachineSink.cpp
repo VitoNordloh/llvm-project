@@ -351,7 +351,13 @@ bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
             MBB.getName().equals("for.inc") ||
             MBB.getName().equals("for.inc.1") ||
             MBB.getName().equals("for.inc.2") ||
-            MBB.getName().equals("for.inc.3")) {
+            MBB.getName().equals("for.inc.3") ||
+            MBB.getName().equals("for.inc.4") ||
+            MBB.getName().equals("for.inc.5") ||
+            MBB.getName().equals("for.inc.6") ||
+            MBB.getName().equals("for.inc.7") ||
+            MBB.getName().equals("for.inc.8") ||
+            MBB.getName().equals("for.inc.9")) {
                 return false;
         }
     }

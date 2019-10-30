@@ -32,6 +32,12 @@ bool SuperblockFinder::runOnFunction(Function &F) {
     SB.push_back(findBasicBlock("for.inc.1"));
     SB.push_back(findBasicBlock("for.inc.2"));
     SB.push_back(findBasicBlock("for.inc.3"));
+    SB.push_back(findBasicBlock("for.inc.4"));
+    SB.push_back(findBasicBlock("for.inc.5"));
+    SB.push_back(findBasicBlock("for.inc.6"));
+    SB.push_back(findBasicBlock("for.inc.7"));
+    SB.push_back(findBasicBlock("for.inc.8"));
+    SB.push_back(findBasicBlock("for.inc.9"));
 
 
     verifySB();
