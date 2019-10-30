@@ -94,7 +94,7 @@ namespace {
     };
 
     bool SuperblockScheduler::runOnFunction(Function &F) {
-        if(!F.getName().equals("pat_search")) {
+        if(!F.getName().equals("quantum_toffoli")) {
             dbgs() << "Skipping " << F.getName() << "\n";
             return false;
         }

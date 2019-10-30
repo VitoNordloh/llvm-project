@@ -100,6 +100,8 @@ add_llvm_library(LLVMCodeGen
   OptimizePHIs.cpp
   ParallelCG.cpp
   PeepholeOptimizer.cpp
+  Permutations.cpp
+  PermutationScheduler.cpp
   PHIElimination.cpp
   PHIEliminationUtils.cpp
   PostRAHazardRecognizer.cpp

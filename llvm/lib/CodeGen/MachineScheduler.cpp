@@ -33,6 +33,8 @@
 #include "llvm/CodeGen/MachinePassRegistry.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
+#include "llvm/CodeGen/Permutations.h"
+#include "llvm/CodeGen/PermutationScheduler.h"
 #include "llvm/CodeGen/RegisterClassInfo.h"
 #include "llvm/CodeGen/RegisterPressure.h"
 #include "llvm/CodeGen/ScheduleDAG.h"
@@ -71,7 +73,6 @@
 #include <memory>
 
 using namespace llvm;
-using namespace std;
 
 #define DEBUG_TYPE "machine-scheduler"
 
@@ -157,7 +158,7 @@ public:
   void print(raw_ostream &O, const Module* = nullptr) const override;
 
 protected:
-  void scheduleRegions(ScheduleDAGInstrs *Scheduler, bool FixKillFlags);
+  void scheduleRegions(ScheduleDAGInstrs *Scheduler, ScheduleDAGInstrs *PermutationScheduler, bool FixKillFlags);
 };
 
 /// MachineScheduler runs after coalescing and before register allocation.
@@ -335,7 +336,6 @@ ScheduleDAGInstrs *MachineScheduler::createMachineScheduler() {
 /// the caller. We don't have a command line option to override the postRA
 /// scheduler. The Target must configure it.
 ScheduleDAGInstrs *PostMachineScheduler::createPostMachineScheduler() {
-  cout << "USING POST RA" << endl;
   // Get the postRA scheduler set by the target for this function.
   ScheduleDAGInstrs *Scheduler = PassConfig->createPostMachineScheduler(this);
   if (Scheduler)
@@ -395,7 +395,10 @@ bool MachineScheduler::runOnMachineFunction(MachineFunction &mf) {
   // optimization level.
   ScheduleDAGInstrs *Scheduler = createMachineScheduler();
 
-  scheduleRegions(Scheduler, false);
+  // Create the PermutationScheduler
+  ScheduleDAGInstrs *PermScheduler = new ScheduleDAGMILive(this, llvm::make_unique<PermutationScheduler>());
+
+  scheduleRegions(Scheduler, PermScheduler, false);
 
   LLVM_DEBUG(LIS->dump());
   if (VerifyScheduling)
@@ -432,7 +435,7 @@ bool PostMachineScheduler::runOnMachineFunction(MachineFunction &mf) {
   // Instantiate the selected scheduler for this target, function, and
   // optimization level.
   ScheduleDAGInstrs *Scheduler = createPostMachineScheduler();
-  scheduleRegions(Scheduler, true);
+  scheduleRegions(Scheduler, nullptr, true);
 
   if (VerifyScheduling)
     MF->verify(this, "After post machine scheduling.");
@@ -515,14 +518,27 @@ getSchedRegions(MachineBasicBlock *MBB,
 }
 
 /// Main driver for both MachineScheduler and PostMachineScheduler.
-void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *Scheduler,
+void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *SchedulerA,
+                                           ScheduleDAGInstrs *PermutationScheduler,
                                            bool FixKillFlags) {
+  Permutations perms;
+
   // Visit all machine basic blocks.
   //
   // TODO: Visit blocks in global postorder or postorder within the bottom-up
   // loop tree. Then we can optionally compute global RegPressure.
   for (MachineFunction::iterator MBB = MF->begin(), MBBEnd = MF->end();
        MBB != MBBEnd; ++MBB) {
+
+    // Check which scheduler to use
+    ScheduleDAGInstrs* Scheduler;
+    if(PermutationScheduler != nullptr && perms.isEnabled(&*MBB)) {
+        LLVM_DEBUG(dbgs() << "Using permutation scheduler\n");
+        Scheduler = PermutationScheduler;
+    } else {
+        LLVM_DEBUG(dbgs() << "Using normal scheduler\n");
+        Scheduler = SchedulerA;
+    }
 
     Scheduler->startBlock(&*MBB);
 
@@ -594,7 +610,8 @@ void MachineSchedulerBase::scheduleRegions(ScheduleDAGInstrs *Scheduler,
     if (FixKillFlags)
       Scheduler->fixupKills(*MBB);
   }
-  Scheduler->finalizeSchedule();
+  SchedulerA->finalizeSchedule();
+  PermutationScheduler->finalizeSchedule();
 }
 
 void MachineSchedulerBase::print(raw_ostream &O, const Module* m) const {
@@ -2402,10 +2419,8 @@ LLVM_DUMP_METHOD void SchedBoundary::dumpScheduledState() const {
 void GenericSchedulerBase::SchedCandidate::
 initResourceDelta(const ScheduleDAGMI *DAG,
                   const TargetSchedModel *SchedModel) {
-  if (!Policy.ReduceResIdx && !Policy.DemandResIdx) {
-    LLVM_DEBUG(dbgs() << "not initialising initResourceDelta\n");
+  if (!Policy.ReduceResIdx && !Policy.DemandResIdx)
     return;
-  }
 
   const MCSchedClassDesc *SC = DAG->getSchedClass(SU);
   for (TargetSchedModel::ProcResIter
@@ -2416,7 +2431,6 @@ initResourceDelta(const ScheduleDAGMI *DAG,
     if (PI->ProcResourceIdx == Policy.DemandResIdx)
       ResDelta.DemandedResources += PI->Cycles;
   }
-  LLVM_DEBUG(dbgs() << "initResourceDelta: " << Policy.ReduceResIdx << "/" << Policy.DemandResIdx << "\n");
 }
 
 /// Set the CandPolicy given a scheduling zone given the current resources and
@@ -2903,8 +2917,6 @@ void GenericScheduler::initCandidate(SchedCandidate &Cand, SUnit *SU,
 void GenericScheduler::tryCandidate(SchedCandidate &Cand,
                                     SchedCandidate &TryCand,
                                     SchedBoundary *Zone) const {
-  LLVM_DEBUG(dbgs() << "tryCandidate!\n");
-  TryCand.initResourceDelta(DAG, SchedModel);
   // Initialize the candidate if needed.
   if (!Cand.isValid()) {
     TryCand.Reason = NodeOrder;
