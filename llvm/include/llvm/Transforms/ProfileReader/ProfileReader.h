@@ -15,6 +15,7 @@ struct ProfileReader : FunctionPass {
 
     ProfileReader() : FunctionPass(ID) {}
     bool runOnFunction(Function &F) override;
+    void getAnalysisUsage(AnalysisUsage &AU) const override;
     map<BasicBlock*, unsigned> &getBBFreq();
 
 private:

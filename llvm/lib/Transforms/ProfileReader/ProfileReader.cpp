@@ -1,3 +1,5 @@
+#include "llvm/Analysis/BlockFrequencyInfo.h"
+#include "llvm/Analysis/BranchProbabilityInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Function.h"
 #include "llvm/IR/Instruction.h"
@@ -31,7 +33,16 @@ namespace {
     }
 }
 
+void ProfileReader::getAnalysisUsage(AnalysisUsage &AU) const {
+    AU.addRequired<BlockFrequencyInfoWrapperPass>();
+    AU.addRequired<BranchProbabilityInfoWrapperPass>();
+
+}
+
 bool ProfileReader::runOnFunction(Function &F) {
+    auto BFI = &getAnalysis<BlockFrequencyInfoWrapperPass>().getBFI();
+    auto BPI = &getAnalysis<BranchProbabilityInfoWrapperPass>().getBPI();
+
     freqMap.clear();
     std::ifstream file(ProfileName);
     string line;
@@ -52,9 +63,13 @@ bool ProfileReader::runOnFunction(Function &F) {
             string thisName = F.getName().str() + "_" + BB.getName().str();
             if(thisName == BBName) {
                 freqMap.insert(pair<BasicBlock*,unsigned>(&BB, freq));
+                BFI->setBlockFreq(&BB, freq);
+                BPI->setEdgeProbability(&BB, 0, BranchProbability(999, 999));
             }
         }
     }
+
+    BFI->print(dbgs());
     return false;
 }
 

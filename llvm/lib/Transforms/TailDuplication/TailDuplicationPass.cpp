@@ -1,3 +1,4 @@
+#include "llvm/Analysis/BlockFrequencyInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CFG.h"
 #include "llvm/IR/Function.h"
@@ -56,7 +57,6 @@ namespace {
     }
 
     void TailDuplication::getAnalysisUsage(AnalysisUsage &AU) const {
-        AU.setPreservesCFG();
         AU.addRequired<SuperblockFinder>();
     }
 

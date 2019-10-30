@@ -2726,6 +2726,20 @@ bool MachineBlockPlacement::maybeTailDuplicateBlock(
   return Removed;
 }
 
+void setProb(std::string A, std::string B, MachineFunction *MF, MachineBranchProbabilityInfo const *MBPI) {
+    // Search A
+    for(auto &MBB : *MF) {
+        if(MBB.getName().equals(A)) {
+            for(auto it = MBB.succ_begin(); it != MBB.succ_end(); ++it) {
+                if((*it)->getName().equals(B)) {
+                    dbgs() << "Setting " << A << " -> " << B << "\n";
+                    MBB.setSuccProbability(it, BranchProbability(999999, 1000000));
+                }
+            }
+        }
+    }
+}
+
 bool MachineBlockPlacement::runOnMachineFunction(MachineFunction &MF) {
   if (skipFunction(MF.getFunction()))
     return false;
@@ -2742,6 +2756,13 @@ bool MachineBlockPlacement::runOnMachineFunction(MachineFunction &MF) {
   TII = MF.getSubtarget().getInstrInfo();
   TLI = MF.getSubtarget().getTargetLowering();
   MPDT = nullptr;
+
+    if(MF.getName().equals("quantum_toffoli")) {
+        setProb("for.body", "for.inc", &MF, MBPI);
+        setProb("for.inc", "for.inc.1", &MF, MBPI);
+        setProb("for.inc.1", "for.inc.2", &MF, MBPI);
+        setProb("for.inc.2", "for.inc.3", &MF, MBPI);
+    }
 
   // Initialize PreferredLoopExit to nullptr here since it may never be set if
   // there are no MachineLoops.
