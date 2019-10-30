@@ -114,6 +114,7 @@ namespace {
     void SuperblockScheduler::getAnalysisUsage(AnalysisUsage &AU) const {
         AU.setPreservesCFG();
         AU.addRequired<DependenceAnalysisWrapperPass>();
+        AU.addPreserved<DependenceAnalysisWrapperPass>();
         AU.addRequired<SuperblockFinder>();
     }
 
