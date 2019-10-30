@@ -57,6 +57,7 @@ namespace {
     }
 
     void TailDuplication::getAnalysisUsage(AnalysisUsage &AU) const {
+        AU.setPreservesCFG();
         AU.addRequired<SuperblockFinder>();
     }
 
