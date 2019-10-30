@@ -266,7 +266,7 @@ namespace {
                      * where the store does not get executed usually (the dependencies between the
                      * store and all other instruction within the new path would have to be determined).
                      */
-                     if(B->instr->mayReadOrWriteMemory()) {
+                     if(B->instr->mayWriteToMemory()) {
                          perm.addDependency(B->id, A->id);
                      }
                 }
