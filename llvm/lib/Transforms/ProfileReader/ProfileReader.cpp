@@ -51,6 +51,7 @@ bool ProfileReader::runOnFunction(Function &F) {
     getline(file, line);
 
     while(getline(file, line)) {
+        dbgs() << line << "\n";
         vector<string> *splitted = split(&line, ";");
         if(splitted->size() != 2) {
             break;
