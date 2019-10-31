@@ -36,7 +36,6 @@ namespace {
 void ProfileReader::getAnalysisUsage(AnalysisUsage &AU) const {
     AU.addRequired<BlockFrequencyInfoWrapperPass>();
     AU.addRequired<BranchProbabilityInfoWrapperPass>();
-
 }
 
 bool ProfileReader::runOnFunction(Function &F) {
@@ -51,13 +50,12 @@ bool ProfileReader::runOnFunction(Function &F) {
     getline(file, line);
 
     while(getline(file, line)) {
-        dbgs() << line << "\n";
         vector<string> *splitted = split(&line, ";");
         if(splitted->size() != 2) {
             break;
         }
         string BBName = splitted->at(0);
-        int freq = stoi(splitted->at(1));
+        int freq = (int) stol(splitted->at(1));
 
         // Search for BB
         for(auto &BB : F) {
