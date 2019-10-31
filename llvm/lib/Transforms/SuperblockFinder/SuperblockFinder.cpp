@@ -159,11 +159,13 @@ void SuperblockFinder::verifySB() {
 }
 
 BasicBlock *SuperblockFinder::findBasicBlock(const string &name) {
+    dbgs() << "Looking for '" << name << "'\n";
     for(auto &BB : *F) {
         if(BB.getName().equals(name)) {
             return &BB;
         }
     }
+    assert(false && "BasicBlock not found");
 }
 
 char SuperblockFinder::ID = 0;
