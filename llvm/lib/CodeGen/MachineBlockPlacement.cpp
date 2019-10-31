@@ -2759,6 +2759,9 @@ bool MachineBlockPlacement::runOnMachineFunction(MachineFunction &MF) {
 
     if(MF.getName().equals("FastFullPelBlockMotionSearch")) {
         setProb("for.body", "for.inc", &MF, MBPI);
+        setProb("for.for.inc", "for.inc1", &MF, MBPI);
+        setProb("for.for.inc1", "for.inc2", &MF, MBPI);
+        setProb("for.for.inc2", "for.inc3", &MF, MBPI);
     }
 
   // Initialize PreferredLoopExit to nullptr here since it may never be set if
