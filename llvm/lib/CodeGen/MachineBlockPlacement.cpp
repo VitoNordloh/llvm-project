@@ -2757,17 +2757,8 @@ bool MachineBlockPlacement::runOnMachineFunction(MachineFunction &MF) {
   TLI = MF.getSubtarget().getTargetLowering();
   MPDT = nullptr;
 
-    if(MF.getName().equals("quantum_toffoli")) {
+    if(MF.getName().equals("FastFullPelBlockMotionSearch")) {
         setProb("for.body", "for.inc", &MF, MBPI);
-        setProb("for.inc", "for.inc.1", &MF, MBPI);
-        setProb("for.inc.1", "for.inc.2", &MF, MBPI);
-        setProb("for.inc.2", "for.inc.3", &MF, MBPI);
-        setProb("for.inc.3", "for.inc.4", &MF, MBPI);
-        setProb("for.inc.4", "for.inc.5", &MF, MBPI);
-        setProb("for.inc.5", "for.inc.6", &MF, MBPI);
-        setProb("for.inc.6", "for.inc.7", &MF, MBPI);
-        setProb("for.inc.7", "for.inc.8", &MF, MBPI);
-        setProb("for.inc.8", "for.inc.9", &MF, MBPI);
     }
 
   // Initialize PreferredLoopExit to nullptr here since it may never be set if

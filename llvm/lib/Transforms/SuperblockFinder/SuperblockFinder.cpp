@@ -19,7 +19,7 @@ using namespace std;
 static cl::opt<string> SuperblockStart("superblock-start", cl::desc("Force the start block of the superblock."));
 
 bool SuperblockFinder::runOnFunction(Function &F) {
-    if(!F.getName().equals("quantum_toffoli")) {
+    if(!F.getName().equals("FastFullPelBlockMotionSearch")) {
         return false;
     }
 
@@ -29,15 +29,6 @@ bool SuperblockFinder::runOnFunction(Function &F) {
 
     SB.push_back(findBasicBlock("for.body"));
     SB.push_back(findBasicBlock("for.inc"));
-    SB.push_back(findBasicBlock("for.inc.1"));
-    SB.push_back(findBasicBlock("for.inc.2"));
-    SB.push_back(findBasicBlock("for.inc.3"));
-    SB.push_back(findBasicBlock("for.inc.4"));
-    SB.push_back(findBasicBlock("for.inc.5"));
-    SB.push_back(findBasicBlock("for.inc.6"));
-    SB.push_back(findBasicBlock("for.inc.7"));
-    SB.push_back(findBasicBlock("for.inc.8"));
-    SB.push_back(findBasicBlock("for.inc.9"));
 
 
     verifySB();

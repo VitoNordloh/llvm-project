@@ -94,7 +94,7 @@ namespace {
     };
 
     bool SuperblockScheduler::runOnFunction(Function &F) {
-        if(!F.getName().equals("quantum_toffoli")) {
+        if(!F.getName().equals("FastFullPelBlockMotionSearch")) {
             dbgs() << "Skipping " << F.getName() << "\n";
             return false;
         }

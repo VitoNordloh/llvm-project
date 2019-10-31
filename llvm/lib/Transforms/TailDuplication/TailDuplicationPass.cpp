@@ -34,7 +34,7 @@ namespace {
     };
 
     bool TailDuplication::runOnFunction(Function &F) {
-        if(!F.getName().equals("quantum_toffoli")) {
+        if(!F.getName().equals("FastFullPelBlockMotionSearch")) {
             return false;
         }
         this->F = &F;
