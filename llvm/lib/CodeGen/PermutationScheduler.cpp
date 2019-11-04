@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <string>
+#include <sys/time.h>
 #include <time.h>
 
 #define DEBUG_TYPE "permutation-scheduler"
@@ -50,12 +51,8 @@ void PermutationScheduler::initialize(ScheduleDAGMI *DAG) {
 
     auto perm = new Permutation<unsigned int>();
     for(auto sunit : dag->SUnits) {
-        if(sunit.NodeNum>40) continue;
         perm->addInstruction(sunit.NodeNum);
         for(auto dep : sunit.Succs) {
-            if(dep.getSUnit()->NodeNum > 40) {
-                continue;
-            }
             if(!dep.isArtificial() && !dep.isCluster()) {
                 perm->addDependency(dep.getSUnit()->NodeNum, sunit.NodeNum);
             }
@@ -73,7 +70,9 @@ void PermutationScheduler::initialize(ScheduleDAGMI *DAG) {
     // units = perm->getPermutation(permutation)->toList();
 
     // Get random permutation
-    srand(time(nullptr));
+    timeval t;
+    gettimeofday(&t, nullptr);
+    srand(t.tv_sec + t.tv_usec);
     units = perm->getRandomPermutation();
 
     // Print random permutation
