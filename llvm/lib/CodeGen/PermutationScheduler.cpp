@@ -65,15 +65,15 @@ void PermutationScheduler::initialize(ScheduleDAGMI *DAG) {
     string name;
     name += string(MBB->getParent()->getName()) + "_" + string(MBB->getName()) + "_" + to_string(regionCounter);
 
-    int permutation = perms.getPermutation(MBB, regionCounter);
+    /*int permutation = perms.getPermutation(MBB, regionCounter);
     LLVM_DEBUG(dbgs() << "REGION " << name << " (" << permutation << "/" << perm->countPermutations() << ")\n");
-    units = perm->getPermutation(permutation)->toList();
+    units = perm->getPermutation(permutation)->toList();*/
 
     // Get random permutation
-    /*timeval t;
+    timeval t;
     gettimeofday(&t, nullptr);
     srand(t.tv_sec + t.tv_usec);
-    units = perm->getRandomPermutation();*/
+    units = perm->getRandomPermutation();
 
     // Print random permutation
     dbgs() << "SCHEDULE " << name << ":";
