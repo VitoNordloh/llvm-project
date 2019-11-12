@@ -878,6 +878,16 @@ void ScheduleDAGInstrs::buildSchedGraph(AliasAnalysis *AA,
     bool ObjsFound = getUnderlyingObjectsForInstr(&MI, MFI, Objs,
                                                   MF.getDataLayout());
 
+    MachineBasicBlock *MB = MI.getParent();
+    MachineFunction *MF = MB->getParent();
+    if(MF->getName().equals("main") && MB->getName().equals("for.body20.i")) {
+      dbgs() << "MachineBasicBlock: " << MI.getParent()->getName() << "\n";
+      if(MI.mayLoad()) {
+        addChainDependencies(SU, Stores);
+        continue;
+      }
+    }
+
     if (MI.mayStore()) {
       if (!ObjsFound) {
         // An unknown store depends on all stores and loads.
