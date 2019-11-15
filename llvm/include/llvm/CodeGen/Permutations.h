@@ -1,6 +1,7 @@
 #include "llvm/CodeGen/MachineBasicBlock.h"
 
 #include <map>
+#include <list>
 #include <string>
 #include <vector>
 
@@ -14,10 +15,14 @@ namespace llvm {
     public:
         Permutations();
         int getPermutation(MachineBasicBlock *MBB, int region);
+        list<unsigned int> getSchedule();
+        bool hasSchedule(MachineBasicBlock *MBB);
         bool isEnabled(MachineBasicBlock *MBB);
     private:
         vector<string> *enabledMBB;
         map<string, int> permutations;
+        string mbbToSchedule;
+        list<unsigned int> schedule;
     };
 }
 

@@ -23,6 +23,8 @@ namespace llvm {
 
     cl::opt<string> permsMbb("perms-mbb");
     cl::opt<string> perms("perms");
+    cl::opt<string> mbbName("mbb-to-schedule");
+    cl::opt<string> mbbSchedule("mbb-schedule");
 
     Permutations::Permutations() {
         // Get enabled MBB
@@ -38,6 +40,17 @@ namespace llvm {
                 permutations.insert(pair<string, int>(regionName, perm));
             }
         }
+
+        if(mbbName.getNumOccurrences()) {
+            mbbToSchedule = mbbName;
+        }
+
+        if(mbbSchedule.getNumOccurrences()) {
+            vector <string> *nodeIds = split(&mbbSchedule, ",");
+            for (auto &id : *nodeIds) {
+                schedule.push_back(stoi(id));
+            }
+        }
     }
 
     int Permutations::getPermutation(MachineBasicBlock *MBB, int region) {
@@ -47,9 +60,20 @@ namespace llvm {
         return permutations.at(name);
     }
 
+    bool Permutations::hasSchedule(MachineBasicBlock *MBB) {
+        string name("");
+        name += string(MBB->getParent()->getName()) + "_" + string(MBB->getName());
+        return name == mbbToSchedule;
+    }
+
+    list<unsigned int> Permutations::getSchedule() {
+        return schedule;
+    }
+
     bool Permutations::isEnabled(MachineBasicBlock *MBB) {
         string name("");
         name += string(MBB->getParent()->getName()) + "_" + string(MBB->getName());
-        return find(enabledMBB->begin(), enabledMBB->end(), name) != enabledMBB->end();
+        return find(enabledMBB->begin(), enabledMBB->end(), name) != enabledMBB->end() ||
+            name == mbbToSchedule;
     }
 }

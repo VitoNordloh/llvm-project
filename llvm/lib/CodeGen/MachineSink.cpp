@@ -346,16 +346,6 @@ bool MachineSinking::runOnMachineFunction(MachineFunction &MF) {
 }
 
 bool MachineSinking::ProcessBlock(MachineBasicBlock &MBB) {
-    if(MBB.getParent()->getName().equals("FastFullPelBlockMotionSearch")) {
-        if (MBB.getName().equals("for.body") ||
-            MBB.getName().equals("for.inc") ||
-            MBB.getName().equals("for.inc.1") ||
-            MBB.getName().equals("for.inc.2") ||
-            MBB.getName().equals("for.inc.3")) {
-                return false;
-        }
-    }
-
   // Can't sink anything out of a block that has less than two successors.
   if (MBB.succ_size() <= 1 || MBB.empty()) return false;
 

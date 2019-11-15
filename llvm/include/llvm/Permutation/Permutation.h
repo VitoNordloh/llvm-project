@@ -93,6 +93,8 @@ public:
     
     bool scheduleInstruction(Schedule *schedule, T inst);
 
+    void dumpGraph(string filename);
+
     void dumpDot(string filename, list<T> nodesToExclude);
 };
 

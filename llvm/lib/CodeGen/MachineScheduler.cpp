@@ -3169,6 +3169,14 @@ SUnit *GenericScheduler::pickNode(bool &IsTopNode) {
 
   LLVM_DEBUG(dbgs() << "Scheduling SU(" << SU->NodeNum << ") "
                     << *SU->getInstr());
+
+    if(SU->getInstr()->getParent()->getParent()->getName().equals("main") &&
+       SU->getInstr()->getParent()->getName().equals("for.body20.i")) {
+        dbgs() << "SCHEDULING " << SU->NodeNum << "\t";
+        DAG->dumpNode(SU);
+        dbgs() << "\n";
+    }
+
   return SU;
 }
 
@@ -3361,6 +3369,7 @@ SUnit *PostGenericScheduler::pickNode(bool &IsTopNode) {
 
   LLVM_DEBUG(dbgs() << "Scheduling SU(" << SU->NodeNum << ") "
                     << *SU->getInstr());
+
   return SU;
 }
 

@@ -262,6 +262,9 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
 
         if (newSchedule->instructions.size() == is->instructions.size()) {
             (*counter)++;
+            if(*stop < 0 && *counter % 1000000 == 0) {
+                dbgs() << "Counter is " << *counter << "\n";
+            }
             if (*stop == 0) {
                 return newSchedule;
             } else {
@@ -304,6 +307,31 @@ bool Permutation<T>::scheduleInstruction(Schedule *schedule, T inst) {
         scheduleInstruction(schedule, directInst);
     }
     return true;
+}
+
+template <class T>
+void Permutation<T>::dumpGraph(string filename) {
+    ofstream file(filename, ios_base::out | ios_base::trunc);
+
+    // Write number of nodes
+    file << is->instructions.size() << endl;
+
+    // Write nodes
+    for(auto &I : is->instructions) {
+        file << labelFn(I) << endl;
+    }
+
+    // Write number of dependencies
+    file << dg->dependencies.size() << endl;
+
+    // Write dependencies
+    for(auto &dep : dg->dependencies) {
+        T dependent = get<0>(dep);
+        T independent = get<1>(dep);
+        file << labelFn(independent) << "->" << labelFn(dependent) << endl;
+    }
+
+    file.close();
 }
 
 template <class T>

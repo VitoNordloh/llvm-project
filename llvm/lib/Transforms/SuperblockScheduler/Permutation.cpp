@@ -248,6 +248,9 @@ typename Permutation<T>::Schedule *Permutation<T>::permute(int *counter, int *st
 
         if (newSchedule->instructions.size() == is->instructions.size()) {
             (*counter)++;
+            if(*stop < 0) {
+                dbgs() << "Counter is " << *counter << "\n";
+            }
             if (*stop == 0) {
                 return newSchedule;
             } else {
